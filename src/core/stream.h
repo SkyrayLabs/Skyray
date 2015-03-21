@@ -15,6 +15,8 @@ zend_class_entry *skyray_ce_Stream;
 
 typedef struct _skyray_stream {
     int fd;
+    zend_bool readable;
+    zend_bool writable;
     zend_object std;
 }skyray_stream_t;
 

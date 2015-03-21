@@ -78,8 +78,14 @@ SKYRAY_METHOD(stream_client, createPipe)
     intern1->fd = fds[0];
     intern2->fd = fds[1];
 
+    intern1->readable = intern2->writable = 1;
+    intern1->writable = intern2->readable = 0;
+
     add_index_zval(return_value, 0, stream1);
     add_index_zval(return_value, 1, stream2);
+
+    efree(stream1);
+    efree(stream2);
 }
 
 

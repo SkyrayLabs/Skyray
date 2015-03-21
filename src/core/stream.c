@@ -36,7 +36,7 @@ SKYRAY_METHOD(stream, __construct)
 
 }
 
-SKYRAY_METHOD(stream, send)
+SKYRAY_METHOD(stream, write)
 {
     zend_string *data = 0;
 
@@ -45,43 +45,75 @@ SKYRAY_METHOD(stream, send)
     }
 
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    if (!intern->writable) {
+        skyray_throw_exception("The stream is not writable.");
+        RETURN_FALSE;
+    }
+
     int ret = write(intern->fd, data->val, data->len);
     if (ret < 0) {
+        skyray_throw_exception_from_errno(errno);
         RETURN_FALSE;
     } else {
         RETURN_TRUE;
     }
 }
 
-SKYRAY_METHOD(stream, recv)
+SKYRAY_METHOD(stream, read)
 {
     if (zend_parse_parameters_none() == FAILURE) {
         return;
     }
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    if (!intern->readable) {
+        skyray_throw_exception("The stream is not readable.");
+        RETURN_FALSE;
+    }
+
     zend_string *buffer = zend_string_alloc(8192, 0);
 
     int ret = read(intern->fd, buffer->val, 8192);
     if (ret < 0) {
+        skyray_throw_exception_from_errno(errno);
         RETURN_FALSE;
     }
     buffer->len = ret;
+    buffer->val[ret] = '\0';
     RETURN_STR(buffer);
 }
+
+SKYRAY_METHOD(stream, close)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    if (close(intern->fd) < 0) {
+        skyray_throw_exception_from_errno(errno);
+        RETURN_FALSE;
+    }
+    RETURN_TRUE;
+}
+
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
     ZEND_ARG_INFO(0, callable)
     ZEND_ARG_INFO(0, args)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_send, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_write, 0, 0, 1)
     ZEND_ARG_INFO(0, obj)
 ZEND_END_ARG_INFO()
 
+
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(stream, __construct, arginfo___construct, ZEND_ACC_PRIVATE | ZEND_ACC_CTOR)
-    SKYRAY_ME(stream, send, arginfo_send, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(stream, recv, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, write, arginfo_write, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, read, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, close, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_FE_END
 };
 
