@@ -4,10 +4,20 @@
 #include "processing/process.h"
 
 
+PHP_MINIT_FUNCTION(skyray_exceptions)
+{
+    zend_class_entry ce;
+    INIT_CLASS_ENTRY(ce, "skyray\\core\\SkyrayException", NULL);
+    skyray_ce_SkyrayException = zend_register_internal_class_ex(&ce, zend_exception_get_default());
+
+    return SUCCESS;
+}
+
 /* {{{ PHP_MINIT_FUNCTION
  */
 PHP_MINIT_FUNCTION(skyray)
 {
+    PHP_MINIT(skyray_exceptions)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream_client)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
