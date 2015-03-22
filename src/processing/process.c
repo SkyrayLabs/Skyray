@@ -34,7 +34,14 @@ static void skyray_process_object_free(zend_object *object)
 {
     skyray_process_t *intern = skyray_process_from_obj(object);
     zend_object_std_dtor(&intern->std);
-    zval_ptr_dtor(intern->callable);
+
+    zval_dtor(intern->callable);
+    efree(intern->callable);
+
+    if (intern->args) {
+        zval_dtor(intern->args);
+        efree(intern->args);
+    }
 }
 
 
@@ -52,7 +59,13 @@ SKYRAY_METHOD(Process, __construct)
     }
 
     skyray_process_t *object = skyray_process_from_obj(Z_OBJ(EX(This)));
-    object->callable = callable;
+    object->callable = emalloc(sizeof(zval));
+    ZVAL_COPY(object->callable, callable);
+
+    if (args) {
+        object->args = emalloc(sizeof(zval));
+        ZVAL_COPY(object->args, args);
+    }
 }
 
 SKYRAY_METHOD(Process, start)
@@ -61,6 +74,7 @@ SKYRAY_METHOD(Process, start)
         return;
     }
     skyray_process_t *object = skyray_process_from_obj(Z_OBJ(EX(This)));
+
     pid_t pid = fork();
     zval func_name, retval;
     object->status = SKYRAY_PROCESS_RUNNING;
@@ -70,7 +84,6 @@ SKYRAY_METHOD(Process, start)
         ZVAL_STRING(&func_name, "run");
         call_user_function(EG(function_table), getThis(), &func_name, &retval, 0, NULL);
         zval_dtor(&func_name);
-
     } else {
         object->pid = pid;
     }
@@ -98,7 +111,25 @@ SKYRAY_METHOD(Process, run)
 
     skyray_process_t *object = skyray_process_from_obj(Z_OBJ(EX(This)));
     zval retval;
-    call_user_function(EG(function_table), NULL, object->callable, &retval, 0, NULL);
+
+    zend_fcall_info fci;
+
+    fci.size = sizeof(fci);
+    fci.function_table = EG(function_table);
+    fci.object = NULL;
+    ZVAL_COPY_VALUE(&fci.function_name, object->callable);
+    fci.retval = &retval;
+    fci.no_separation = (zend_bool) 1;
+    fci.symbol_table = NULL;
+    fci.param_count = 0;
+    fci.params = NULL;
+
+    if (object->args) {
+        zend_fcall_info_args(&fci, object->args TSRMLS_CC);
+    }
+
+    zend_call_function(&fci, NULL);
+
     convert_to_long(&retval);
     exit(Z_LVAL(retval));
 }
@@ -113,6 +144,7 @@ SKYRAY_METHOD(Process, join)
     int pid = waitpid(object->pid, &status, 0);
     if (pid > 0) {
         object->status = SKYRAY_PROCESS_TERMINATED;
+        object->exit_code = status;
     }
     RETURN_LONG(status);
 }
@@ -149,6 +181,12 @@ SKYRAY_METHOD(Process, getExitCode)
         return;
     }
 
+    skyray_process_t *object = skyray_process_from_obj(Z_OBJ(EX(This)));
+    if (object->status != SKYRAY_PROCESS_TERMINATED) {
+        RETURN_NULL();
+    }
+
+    RETURN_LONG(WEXITSTATUS(object->exit_code));
 }
 
 SKYRAY_METHOD(Process, signal)

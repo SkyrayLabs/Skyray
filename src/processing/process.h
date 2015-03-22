@@ -24,6 +24,8 @@ typedef struct _skyray_process {
     pid_t pid;  /* The pid of the process */
     int status; /* The running status of the process */
     zval *callable;
+    zval *args;
+    int exit_code;
     zend_object std;
 }skyray_process_t;
 
