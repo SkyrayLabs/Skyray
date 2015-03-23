@@ -7,6 +7,33 @@
 PHP_MINIT_FUNCTION(skyray_exceptions)
 {
     zend_class_entry ce;
+
+    ZEND_BEGIN_ARG_INFO_EX(arginfo_dataReceived, 0, 0, 1)
+        ZEND_ARG_INFO(0, data)
+    ZEND_END_ARG_INFO()
+
+    ZEND_BEGIN_ARG_INFO_EX(arginfo_connectStream, 0, 0, 1)
+        ZEND_ARG_INFO(0, stream)
+    ZEND_END_ARG_INFO()
+
+    static const zend_function_entry class_methods[] = {
+        SKYRAY_ABSTRACT_ME(ProtocolInterface, connectStream, arginfo_connectStream)
+        SKYRAY_ABSTRACT_ME(ProtocolInterface, streamConnected, arginfo_empty)
+        SKYRAY_ABSTRACT_ME(ProtocolInterface, dataReceived, arginfo_dataReceived)
+        SKYRAY_ABSTRACT_ME(ProtocolInterface, streamClosed, arginfo_empty)
+        PHP_FE_END
+    };
+
+
+    INIT_CLASS_ENTRY(ce, "skyray\\core\\ProtocolInterface", class_methods);
+    skyray_ce_ProtocolInterface = zend_register_internal_interface(&ce);
+
+    return SUCCESS;
+}
+
+PHP_MINIT_FUNCTION(skyray_interfaces)
+{
+    zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\core\\SkyrayException", NULL);
     skyray_ce_SkyrayException = zend_register_internal_class_ex(&ce, zend_exception_get_default());
 
@@ -18,6 +45,7 @@ PHP_MINIT_FUNCTION(skyray_exceptions)
 PHP_MINIT_FUNCTION(skyray)
 {
     PHP_MINIT(skyray_exceptions)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(skyray_interfaces)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream_client)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
