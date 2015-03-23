@@ -29,7 +29,42 @@ void skyray_stream_object_free(zend_object *object)
     zend_object_std_dtor(&intern->std);
 }
 
+int skyray_stream_write(skyray_stream_t * self, zend_string *buffer)
+{
+    if (!self->writable) {
+        skyray_throw_exception("The stream is not writable.");
+        return -1;
+    }
 
+    int ret = write(self->fd, buffer->val, buffer->len);
+    if (ret < 0) {
+        skyray_throw_exception_from_errno(errno);
+        return -1;
+    } else {
+        return ret;
+    }
+}
+
+zend_string * skyray_stream_read(skyray_stream_t * self)
+{
+    if (!self->readable) {
+        skyray_throw_exception("The stream is not readable.");
+        return NULL;
+    }
+
+    zend_string *buffer = zend_string_alloc(8192, 0);
+
+    int ret = read(self->fd, buffer->val, 8192);
+    if (ret < 0) {
+        zend_string_free(buffer);
+        skyray_throw_exception_from_errno(errno);
+        return NULL;
+    }
+    buffer->len = ret;
+    buffer->val[ret] = '\0';
+
+    return buffer;
+}
 
 SKYRAY_METHOD(stream, __construct)
 {
@@ -46,18 +81,8 @@ SKYRAY_METHOD(stream, write)
 
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
 
-    if (!intern->writable) {
-        skyray_throw_exception("The stream is not writable.");
-        RETURN_FALSE;
-    }
-
-    int ret = write(intern->fd, data->val, data->len);
-    if (ret < 0) {
-        skyray_throw_exception_from_errno(errno);
-        RETURN_FALSE;
-    } else {
-        RETURN_TRUE;
-    }
+    int written = skyray_stream_write(intern, data);
+    RETURN_BOOL(written != -1);
 }
 
 SKYRAY_METHOD(stream, read)
@@ -67,20 +92,8 @@ SKYRAY_METHOD(stream, read)
     }
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
 
-    if (!intern->readable) {
-        skyray_throw_exception("The stream is not readable.");
-        RETURN_FALSE;
-    }
+    zend_string *buffer = skyray_stream_read(intern);
 
-    zend_string *buffer = zend_string_alloc(8192, 0);
-
-    int ret = read(intern->fd, buffer->val, 8192);
-    if (ret < 0) {
-        skyray_throw_exception_from_errno(errno);
-        RETURN_FALSE;
-    }
-    buffer->len = ret;
-    buffer->val[ret] = '\0';
     RETURN_STR(buffer);
 }
 
