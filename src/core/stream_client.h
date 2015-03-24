@@ -14,7 +14,8 @@ zend_class_entry *skyray_ce_StreamClient;
 
 typedef struct _skyray_stream_client {
     // protocol
-    // reactor
+    zval *protocol_creator;
+    zval *reactor;
     zend_object std;
 }skyray_stream_client_t;
 

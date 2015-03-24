@@ -15,6 +15,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+#include <netinet/in.h>
 
 
 #ifdef PHP_WIN32

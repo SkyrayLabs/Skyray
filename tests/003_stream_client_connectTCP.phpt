@@ -1,15 +1,82 @@
 --TEST--
-Test for StreamClient::connectTCP()
+Test for StreamClient::connectTCP() blocking mode
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
 use skyray\core\StreamClient;
+use skyray\processing\Process;
+use skyray\core\ProtocolInterface;
 
-$client = new StreamClient(null);
-$stream = $client->connectTCP('122.0.0.1', 8080);
-var_dump($stream);
-?>
---EXPECTF--
-object(skyray\core\Stream)#2 (0) {
+function start_http_server()
+{
+    exec('php -S 0.0.0.0:2333 > /dev/null 2>&1');
 }
+
+$process = new Process('start_http_server');
+$process->start();
+sleep(1);
+
+echo "==== test without protocol ====\n";
+$client = new StreamClient(null);
+$stream = $client->connectTCP('127.0.0.1', 2333);
+var_dump(get_class($stream));
+$stream->write("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");
+$data = $stream->read();
+echo explode("\r\n", $data)[0] . PHP_EOL;
+echo "==== done ====\n\n";
+
+echo "==== test with protocol ====\n";
+
+
+
+class MyProtocol implements ProtocolInterface
+{
+    protected $stream;
+
+    public function connectStream($stream)
+    {
+        $this->stream = $stream;
+    }
+
+    public function streamConnected()
+    {
+        $this->stream->write("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");
+    }
+
+    public function dataReceived($data)
+    {
+        echo explode("\r\n", $data)[0] . PHP_EOL;
+    }
+
+    public function streamClosed()
+    {
+        echo "closed\n";
+    }
+}
+
+$creator = function () {
+    return new MyProtocol();
+};
+
+$client = new StreamClient($creator);
+$protocol = $client->connectTCP('127.0.0.1', 2333);
+var_dump(get_class($protocol));
+echo "==== done ====\n";
+
+posix_kill($process->getPid(), 15);
+$process->join();
+
+?>
+
+--EXPECTF--
+==== test without protocol ====
+string(18) "skyray\core\Stream"
+HTTP/1.1 404 Not Found
+==== done ====
+
+==== test with protocol ====
+HTTP/1.1 404 Not Found
+closed
+string(10) "MyProtocol"
+==== done ====
