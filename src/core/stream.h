@@ -19,10 +19,12 @@ typedef enum _skyray_stream_status {
     SKYRAY_STREAM_STATUS_CLOSED,
 }skyray_stream_status_t;
 
+#define SKYRAY_STREAM_READABLE 1
+#define SKYRAY_STREAM_WRITABLE 2
+
 typedef struct _skyray_stream {
     int fd;
-    zend_bool readable;
-    zend_bool writable;
+    int rw_mask;
     skyray_stream_status_t status;
     zend_object std;
 }skyray_stream_t;

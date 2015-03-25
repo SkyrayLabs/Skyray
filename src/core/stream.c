@@ -15,6 +15,8 @@ zend_object * skyray_stream_object_new(zend_class_entry *ce)
     skyray_stream_t *intern;
     intern = ecalloc(1, sizeof(skyray_stream_t) + zend_object_properties_size(ce));
     intern->fd = 0;
+    intern->status = SKYRAY_STREAM_STATUS_OPENING;
+    intern->rw_mask = 0;
 
     zend_object_std_init(&intern->std, ce);
     object_properties_init(&intern->std, ce);
@@ -31,7 +33,11 @@ void skyray_stream_object_free(zend_object *object)
 
 int skyray_stream_write(skyray_stream_t * self, zend_string *buffer)
 {
-    if (!self->writable) {
+    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+        skyray_throw_exception("Unable to write data to closed stream.");
+        return -1;
+    }
+    if (!(self->rw_mask & SKYRAY_STREAM_WRITABLE)) {
         skyray_throw_exception("The stream is not writable.");
         return -1;
     }
@@ -47,7 +53,12 @@ int skyray_stream_write(skyray_stream_t * self, zend_string *buffer)
 
 zend_string * skyray_stream_read(skyray_stream_t * self)
 {
-    if (!self->readable) {
+    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+        skyray_throw_exception("Unable to read data from closed stream.");
+        return NULL;
+    }
+
+    if (!(self->rw_mask & SKYRAY_STREAM_READABLE)) {
         skyray_throw_exception("The stream is not readable.");
         return NULL;
     }
@@ -64,6 +75,32 @@ zend_string * skyray_stream_read(skyray_stream_t * self)
     buffer->val[ret] = '\0';
 
     return buffer;
+}
+
+void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
+{
+    self->status = SKYRAY_STREAM_STATUS_OPENED;
+    self->rw_mask = rw_mask;
+}
+
+void skyray_stream_on_closed(skyray_stream_t *self)
+{
+    self->status = SKYRAY_STREAM_STATUS_CLOSED;
+    self->rw_mask = 0;
+}
+
+zend_bool skyray_stream_close(skyray_stream_t *self)
+{
+    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+        return 1;
+    }
+    if (close(self->fd) < 0) {
+        skyray_throw_exception_from_errno(errno);
+        return 0;
+    }
+    skyray_stream_on_closed(self);
+
+    return 1;
 }
 
 SKYRAY_METHOD(stream, __construct)
@@ -94,6 +131,10 @@ SKYRAY_METHOD(stream, read)
 
     zend_string *buffer = skyray_stream_read(intern);
 
+    if (!buffer) {
+        RETURN_NULL();
+    }
+
     RETURN_STR(buffer);
 }
 
@@ -104,10 +145,8 @@ SKYRAY_METHOD(stream, close)
     }
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
 
-    if (close(intern->fd) < 0) {
-        skyray_throw_exception_from_errno(errno);
-        RETURN_FALSE;
-    }
+    skyray_stream_close(intern);
+
     RETURN_TRUE;
 }
 

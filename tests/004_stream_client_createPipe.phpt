@@ -28,11 +28,17 @@ try {
 } catch (SkyrayException $e) {
     echo $e->getMessage() . PHP_EOL;
 }
-
+try {
+    $streams[1]->read();
+    echo "should never reached\n";
+} catch (SkyrayException $e) {
+    echo $e->getMessage() . PHP_EOL;
+}
 ?>
 --EXPECTF--
 The stream is not writable.
 bool(true)
 string(4) "data"
 string(0) ""
-[9] Bad file descriptor
+Unable to write data to closed stream.
+Unable to read data from closed stream.

@@ -181,7 +181,8 @@ SKYRAY_METHOD(stream_client, connectTCP)
 
     skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
     stream_intern->fd = fd;
-    stream_intern->writable = stream_intern->readable = 1;
+
+    skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
 
     if (!intern->protocol_creator) {
         RETURN_OBJ(stream);
@@ -234,8 +235,8 @@ SKYRAY_METHOD(stream_client, createPipe)
     intern1->fd = fds[0];
     intern2->fd = fds[1];
 
-    intern1->readable = intern2->writable = 1;
-    intern1->writable = intern2->readable = 0;
+    skyray_stream_on_opened(intern1, SKYRAY_STREAM_READABLE);
+    skyray_stream_on_opened(intern2, SKYRAY_STREAM_WRITABLE);
 
     add_index_zval(return_value, 0, stream1);
     add_index_zval(return_value, 1, stream2);
