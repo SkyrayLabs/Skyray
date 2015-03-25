@@ -11,7 +11,7 @@
 
 #include "src/skyray.h"
 
-zend_class_entry *skyray_ce_Process;
+extern zend_class_entry *skyray_ce_Process;
 
 typedef enum _skyray_process_status {
     SKYRAY_PROCESS_INIT = 0,

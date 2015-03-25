@@ -9,6 +9,7 @@
 #include "src/skyray.h"
 #include "src/processing/process.h"
 
+zend_class_entry *skyray_ce_Process;
 zend_object_handlers skyray_handler_Process;
 
 static inline skyray_process_t *skyray_process_from_obj(zend_object *obj) /* {{{ */ {

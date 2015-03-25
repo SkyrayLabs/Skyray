@@ -31,8 +31,8 @@
 #include "TSRM.h"
 #endif
 
-zend_class_entry * skyray_ce_SkyrayException;
-zend_class_entry * skyray_ce_ProtocolInterface;
+extern zend_class_entry * skyray_ce_SkyrayException;
+extern zend_class_entry * skyray_ce_ProtocolInterface;
 
 #define SKYRAY_MN(name) zim_skyray_##name
 #define SKYRAY_METHOD(classname, name) ZEND_NAMED_FUNCTION(SKYRAY_MN(classname##_##name))

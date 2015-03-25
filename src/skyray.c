@@ -3,8 +3,10 @@
 #include "core/stream.h"
 #include "processing/process.h"
 
+zend_class_entry * skyray_ce_SkyrayException;
+zend_class_entry * skyray_ce_ProtocolInterface;
 
-PHP_MINIT_FUNCTION(skyray_exceptions)
+PHP_MINIT_FUNCTION(skyray_interfaces)
 {
     zend_class_entry ce;
 
@@ -31,7 +33,7 @@ PHP_MINIT_FUNCTION(skyray_exceptions)
     return SUCCESS;
 }
 
-PHP_MINIT_FUNCTION(skyray_interfaces)
+PHP_MINIT_FUNCTION(skyray_exceptions)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\core\\SkyrayException", NULL);

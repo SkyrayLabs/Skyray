@@ -7,7 +7,7 @@
 
 #include "stream.h"
 
-
+zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
 
 zend_object * skyray_stream_object_new(zend_class_entry *ce)

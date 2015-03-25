@@ -11,12 +11,19 @@
 
 #include "src/skyray.h"
 
-zend_class_entry *skyray_ce_Stream;
+extern zend_class_entry *skyray_ce_Stream;
+
+typedef enum _skyray_stream_status {
+    SKYRAY_STREAM_STATUS_OPENING = 1,
+    SKYRAY_STREAM_STATUS_OPENED,
+    SKYRAY_STREAM_STATUS_CLOSED,
+}skyray_stream_status_t;
 
 typedef struct _skyray_stream {
     int fd;
     zend_bool readable;
     zend_bool writable;
+    skyray_stream_status_t status;
     zend_object std;
 }skyray_stream_t;
 

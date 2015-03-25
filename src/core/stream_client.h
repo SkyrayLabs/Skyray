@@ -10,7 +10,7 @@
 
 #include "src/skyray.h"
 
-zend_class_entry *skyray_ce_StreamClient;
+extern zend_class_entry *skyray_ce_StreamClient;
 
 typedef struct _skyray_stream_client {
     // protocol

@@ -8,6 +8,7 @@
 #include "stream_client.h"
 #include "stream.h"
 
+zend_class_entry *skyray_ce_StreamClient;
 zend_object_handlers skyray_handler_StreamClient;
 
 static inline skyray_stream_client_t *skyray_stream_client_from_obj(zend_object *obj) {
