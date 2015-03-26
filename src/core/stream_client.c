@@ -6,6 +6,7 @@
  */
 
 #include "stream_client.h"
+#include "protocol.h"
 #include "stream.h"
 
 zend_class_entry *skyray_ce_StreamClient;
@@ -84,70 +85,6 @@ int stream_client_do_connect(char *host, int port)
     return fd;
 }
 
-void protocol_on_connect_stream(zval *protocol, zend_object *stream)
-{
-    zval function_name;
-    ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("connectStream"), 0));
-
-    zval retval;
-    zval params[1];
-
-    ZVAL_OBJ(&params[0], stream);
-
-    call_user_function(EG(function_table), protocol, &function_name, &retval, 1, params);
-    zval_dtor(&function_name);
-}
-
-void protocol_on_stream_connected(zval *protocol)
-{
-    zval function_name;
-    zval retval;
-
-    ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("streamConnected"), 0));
-
-    call_user_function(EG(function_table), protocol, &function_name, &retval, 0, NULL);
-    zval_dtor(&function_name);
-}
-
-void protocol_on_data_received(zval *protocol, zend_string *data)
-{
-    zval function_name;
-    ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("dataReceived"), 0));
-
-    zval retval;
-    zval params[1];
-
-    ZVAL_STR(&params[0], data);
-
-
-    call_user_function(EG(function_table), protocol, &function_name, &retval, 1, params);
-    zval_dtor(&function_name);
-}
-
-void protocol_on_stream_closed(zval *protocol)
-{
-    zval function_name;
-    zval retval;
-
-    ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("streamClosed"), 0));
-
-    call_user_function(EG(function_table), protocol, &function_name, &retval, 0, NULL);
-    zval_dtor(&function_name);
-}
-
-zend_object * stream_client_create_protocol(skyray_stream_client_t *self)
-{
-    zval protocol;
-    call_user_function(EG(function_table), NULL, self->protocol_creator, &protocol, 0, NULL);
-
-    if (!instanceof_function(Z_OBJCE(protocol), skyray_ce_ProtocolInterface)) {
-        skyray_throw_exception("The protocol created by $protocolCreator must be instance of 'skyray\\core\\ProtocolInterface'");
-        return NULL;
-    }
-
-    return Z_OBJ_P(&protocol);
-}
-
 SKYRAY_METHOD(stream_client, connectTCP)
 {
     zend_string *host;
@@ -162,7 +99,7 @@ SKYRAY_METHOD(stream_client, connectTCP)
     skyray_stream_client_t *intern = skyray_stream_client_from_obj(Z_OBJ_P(getThis()));
 
     if (intern->protocol_creator) {
-        protocol_obj = stream_client_create_protocol(intern);
+        protocol_obj = skyray_protocol_create_from_factory(intern->protocol_creator);
 
         if (!protocol_obj) {
             return;
@@ -189,9 +126,9 @@ SKYRAY_METHOD(stream_client, connectTCP)
         return;
     }
 
-    protocol_on_connect_stream(&protocol, stream);
+    skyray_protocol_on_connect_stream(&protocol, stream);
 
-    protocol_on_stream_connected(&protocol);
+    skyray_protocol_on_stream_connected(&protocol);
 
     zend_string *buffer;
 
@@ -200,11 +137,11 @@ SKYRAY_METHOD(stream_client, connectTCP)
             zend_string_free(buffer);
             break;
         }
-        protocol_on_data_received(&protocol, buffer);
+        skyray_protocol_on_data_received(&protocol, buffer);
         zend_string_free(buffer);
     }
 
-    protocol_on_stream_closed(&protocol);
+    skyray_protocol_on_stream_closed(&protocol);
 
     RETURN_OBJ(Z_OBJ(protocol));
 }
@@ -244,9 +181,6 @@ SKYRAY_METHOD(stream_client, createPipe)
     efree(stream1);
     efree(stream2);
 }
-
-
-
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
