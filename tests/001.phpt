@@ -34,6 +34,20 @@ $process->start();
 echo 'Process id: ' . $process->getPid() . PHP_EOL;
 $process->join();
 echo 'Process exited with: ' . $process->getExitCode() . PHP_EOL;
+
+echo "==== test throw exception ====\n";
+
+class TestWorker2 {
+    public function run()
+    {
+        throw new \RuntimeException('i am an exception');
+    }
+}
+$worker = new TestWorker2();
+$process = new Process([$worker, 'run']);
+$process->start();
+$process->join();
+echo 'Process exited with: ' . $process->getExitCode() . PHP_EOL;
 echo "done\n";
 ?>
 --EXPECTF--
@@ -45,4 +59,6 @@ Process exited with: 100
 Process id: %d
 it works foo bar
 Process exited with: 100
+==== test throw exception ====
+Process exited with: 101
 done

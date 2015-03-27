@@ -130,9 +130,12 @@ SKYRAY_METHOD(Process, run)
     }
 
     zend_call_function(&fci, NULL);
-
-    convert_to_long(&retval);
-    exit(Z_LVAL(retval));
+    if (EG(exception)) {
+        exit(101);
+    } else {
+        convert_to_long(&retval);
+        exit(Z_LVAL(retval));
+    }
 }
 
 SKYRAY_METHOD(Process, join)
