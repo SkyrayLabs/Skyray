@@ -2,7 +2,39 @@
 
 namespace skyray\core;
 
+/**
+ * Class Timer
+ *
+ * @package skyray\core
+ * @since 0.1
+ */
+class Timer
+{
+    /**
+     * Get the interval of the timer.
+     *
+     * @return integer
+     */
+    public function getInterval()
+    {
 
-class Timer {
+    }
 
+    /**
+     * Returns whether the timer is periodic.
+     *
+     * @return boolean
+     */
+    public function isPeriodic()
+    {
+
+    }
+
+    /**
+     * Cancel the timer.
+     */
+    public function cancel()
+    {
+
+    }
 }

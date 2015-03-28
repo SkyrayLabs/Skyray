@@ -6,40 +6,98 @@ namespace skyray\core;
  * Class Reactor
  *
  * @package skyray\core
- * @since 0.0.1
+ * @since 0.1
  */
-class Reactor {
-
-    public function addReadableStream($stream, $callback)
+class Reactor
+{
+    /**
+     * Add a reader stream to reactor.
+     *
+     * @param \skyray\core\Stream $stream The stream to add
+     * @param callable $callback The callback is only useful when adding streams that without protocol associated.
+     */
+    public function addReader($stream, $callback = null)
     {
 
     }
 
-    public function addWritableStream($stream, $callback)
+    /**
+     * Add a writer stream to reactor.
+     *
+     * @param \skyray\core\Stream $stream The stream to add
+     * @param callable $callback The callback is only useful when adding streams that without protocol associated.
+     */
+    public function addWriter($stream, $callback = null)
     {
 
     }
 
-    public function removeReadableStream($stream)
+    /**
+     * Add a stream to reactor for both read and write.
+     *
+     * @param $stream
+     * @param null $callback
+     */
+    public function addBoth($stream, $callback = null)
     {
 
     }
 
-    public function removeWritableStream($stream)
+    /**
+     * Remove the specified reader stream from reactor.
+     *
+     * @param $stream
+     */
+    public function removeReader($stream)
     {
 
     }
 
-    public function addTimer($timeout)
+    /**
+     * Remove the specified writer stream from reactor.
+     *
+     * @param $stream
+     */
+    public function removeWriter($stream)
     {
 
     }
 
-    public function cacelTimer($timer)
+    /**
+     * Remove a stream from reactor for both read and write.
+     *
+     * @param $stream
+     */
+    public function removeBoth($stream)
     {
 
     }
 
+    /**
+     * Add to timer to reactor
+     *
+     * @param $callback
+     * @param $interval
+     * @param $periodic
+     */
+    public function addTimer($callback, $interval, $periodic = false)
+    {
+
+    }
+
+    /**
+     * Cancel the timer
+     *
+     * @param $timer
+     */
+    public function cancelTimer($timer)
+    {
+
+    }
+
+    /**
+     * Start the reactor, the method will block until no stream or timer needs monitoring.
+     */
     public function run()
     {
 
