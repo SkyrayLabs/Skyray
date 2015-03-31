@@ -46,7 +46,7 @@ if test "$PHP_SKYRAY" != "no"; then
   dnl LIBNAME=skyray # you may want to change this
   dnl LIBSYMBOL=skyray # you most likely want to change this 
 
-  UV_DIR=$(pwd)/libuv
+  UV_DIR=$(pwd)/deps/libuv
   
   AC_MSG_CHECKING([for libuv source tree presents])
   if test -r $UV_DIR/src ; then
