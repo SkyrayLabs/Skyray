@@ -46,17 +46,21 @@ if test "$PHP_SKYRAY" != "no"; then
   dnl LIBNAME=skyray # you may want to change this
   dnl LIBSYMBOL=skyray # you most likely want to change this 
 
-  dnl PHP_CHECK_LIBRARY($LIBNAME,$LIBSYMBOL,
-  dnl [
-  dnl   PHP_ADD_LIBRARY_WITH_PATH($LIBNAME, $SKYRAY_DIR/$PHP_LIBDIR, SKYRAY_SHARED_LIBADD)
-  dnl   AC_DEFINE(HAVE_SKYRAYLIB,1,[ ])
-  dnl ],[
-  dnl   AC_MSG_ERROR([wrong skyray lib version or lib not found])
-  dnl ],[
-  dnl   -L$SKYRAY_DIR/$PHP_LIBDIR -lm
-  dnl ])
-  dnl
-  dnl PHP_SUBST(SKYRAY_SHARED_LIBADD)
+  UV_DIR=$(pwd)/libuv
+  
+  AC_MSG_CHECKING([for libuv source tree presents])
+  if test -r $UV_DIR/src ; then
+    PHP_ADD_LIBRARY_WITH_PATH(uv, $UV_DIR/out/Debug, SKYRAY_SHARED_LIBADD)
+    AC_MSG_RESULT([yes])
+  else
+    AC_MSG_ERROR([the libuv source tree can not be found in "$UV_DIR", please run "git submodule init"])
+  fi
+
+  PHP_ADD_INCLUDE($UV_DIR/include)
+
+  PHP_ADD_LIBRARY_WITH_PATH(pthread,, SKYRAY_SHARED_LIBADD)
+
+  PHP_SUBST(SKYRAY_SHARED_LIBADD)
   
   sources="
     src/skyray.c                    \
@@ -67,4 +71,6 @@ if test "$PHP_SKYRAY" != "no"; then
   "
   
   PHP_NEW_EXTENSION(skyray, $sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
+  
+  PHP_ADD_MAKEFILE_FRAGMENT(Makefile.frag)
 fi

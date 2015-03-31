@@ -1,4 +1,5 @@
 .deps
+deps/
 *.lo
 *.la
 .libs
