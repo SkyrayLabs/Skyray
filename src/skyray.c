@@ -1,5 +1,6 @@
 #include "skyray.h"
 
+#include "core/reactor.h"
 #include "core/stream.h"
 #include "processing/process.h"
 
@@ -48,6 +49,7 @@ PHP_MINIT_FUNCTION(skyray)
 {
     PHP_MINIT(skyray_exceptions)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_interfaces)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(skyray_reactor)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream_client)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(stream)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
