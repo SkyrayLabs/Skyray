@@ -76,11 +76,21 @@ class Reactor
     /**
      * Add to timer to reactor
      *
-     * @param $callback
      * @param $interval
-     * @param $periodic
+     * @param $callback
      */
-    public function addTimer($callback, $interval, $periodic = false)
+    public function addTimer($interval, $callback)
+    {
+
+    }
+
+    /**
+     * Add a timer that will run periodically.
+     *
+     * @param $interval
+     * @param $callback
+     */
+    public function addPeriodicTimer($interval, $callback)
     {
 
     }
