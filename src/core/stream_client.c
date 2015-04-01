@@ -132,7 +132,7 @@ SKYRAY_METHOD(stream_client, connectTCP)
 
     zend_string *buffer;
 
-    while((buffer = skyray_stream_read(stream_intern))) {
+    while((buffer = skyray_stream_read(stream_intern, 0))) {
         if (buffer->len == 0) {
             zend_string_free(buffer);
             break;

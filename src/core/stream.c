@@ -51,15 +51,15 @@ int skyray_stream_write(skyray_stream_t * self, zend_string *buffer)
     }
 }
 
-zend_string * skyray_stream_read(skyray_stream_t * self)
+zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
 {
     if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
-        skyray_throw_exception("Unable to read data from closed stream.");
+        !slient && skyray_throw_exception("Unable to read data from closed stream.");
         return NULL;
     }
 
     if (!(self->rw_mask & SKYRAY_STREAM_READABLE)) {
-        skyray_throw_exception("The stream is not readable.");
+        !slient && skyray_throw_exception("The stream is not readable.");
         return NULL;
     }
 
@@ -68,7 +68,7 @@ zend_string * skyray_stream_read(skyray_stream_t * self)
     int ret = read(self->fd, buffer->val, 8192);
     if (ret < 0) {
         zend_string_free(buffer);
-        skyray_throw_exception_from_errno(errno);
+        !slient && skyray_throw_exception_from_errno(errno);
         return NULL;
     }
     buffer->len = ret;
@@ -129,7 +129,7 @@ SKYRAY_METHOD(stream, read)
     }
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
 
-    zend_string *buffer = skyray_stream_read(intern);
+    zend_string *buffer = skyray_stream_read(intern, 0);
 
     if (!buffer) {
         RETURN_NULL();

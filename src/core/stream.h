@@ -34,7 +34,7 @@ static inline skyray_stream_t *skyray_stream_from_obj(zend_object *obj) /* {{{ *
 }
 
 int skyray_stream_write(skyray_stream_t * self, zend_string *buffer);
-zend_string * skyray_stream_read(skyray_stream_t * self);
+zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient);
 
 PHP_MINIT_FUNCTION(stream);
 
