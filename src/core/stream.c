@@ -17,6 +17,7 @@ zend_object * skyray_stream_object_new(zend_class_entry *ce)
     intern->fd = 0;
     intern->status = SKYRAY_STREAM_STATUS_OPENING;
     intern->rw_mask = 0;
+    ZVAL_NULL(&intern->protocol);
 
     zend_object_std_init(&intern->std, ce);
     object_properties_init(&intern->std, ce);
@@ -31,7 +32,15 @@ void skyray_stream_object_free(zend_object *object)
     zend_object_std_dtor(&intern->std);
 }
 
-int skyray_stream_write(skyray_stream_t * self, zend_string *buffer)
+void skyray_stream_init(skyray_stream_t *self, int fd, zend_object *protocol)
+{
+    self->fd = fd;
+    if (protocol) {
+        ZVAL_OBJ(&self->protocol, protocol);
+    }
+}
+
+int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
 {
     if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
         skyray_throw_exception("Unable to write data to closed stream.");
@@ -74,19 +83,38 @@ zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
     buffer->len = ret;
     buffer->val[ret] = '\0';
 
+    if (ret == 0) {
+        skyray_stream_on_closed(self);
+    }
+
     return buffer;
+}
+
+void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer)
+{
+    if (!ZVAL_IS_NULL(&self->protocol)) {
+        skyray_protocol_on_data_received(&self->protocol, buffer);
+    }
 }
 
 void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
 {
     self->status = SKYRAY_STREAM_STATUS_OPENED;
     self->rw_mask = rw_mask;
+
+    if (!ZVAL_IS_NULL(&self->protocol)) {
+        skyray_protocol_on_connect_stream(&self->protocol, &self->std);
+        skyray_protocol_on_stream_connected(&self->protocol);
+    }
 }
 
 void skyray_stream_on_closed(skyray_stream_t *self)
 {
     self->status = SKYRAY_STREAM_STATUS_CLOSED;
     self->rw_mask = 0;
+    if (!ZVAL_IS_NULL(&self->protocol)) {
+        skyray_protocol_on_stream_closed(&self->protocol);
+    }
 }
 
 zend_bool skyray_stream_close(skyray_stream_t *self)

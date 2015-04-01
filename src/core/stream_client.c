@@ -95,7 +95,7 @@ SKYRAY_METHOD(stream_client, connectTCP)
     }
 
     zval protocol;
-    zend_object *protocol_obj;
+    zend_object *protocol_obj = NULL;
     skyray_stream_client_t *intern = skyray_stream_client_from_obj(Z_OBJ_P(getThis()));
 
     if (intern->protocol_creator) {
@@ -117,7 +117,8 @@ SKYRAY_METHOD(stream_client, connectTCP)
     zend_object *stream = Z_OBJ_P(return_value);
 
     skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
-    stream_intern->fd = fd;
+
+    skyray_stream_init(stream_intern, fd, protocol_obj);
 
     skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
 
@@ -126,10 +127,6 @@ SKYRAY_METHOD(stream_client, connectTCP)
         return;
     }
 
-    skyray_protocol_on_connect_stream(&protocol, stream);
-
-    skyray_protocol_on_stream_connected(&protocol);
-
     zend_string *buffer;
 
     while((buffer = skyray_stream_read(stream_intern, 0))) {
@@ -137,11 +134,9 @@ SKYRAY_METHOD(stream_client, connectTCP)
             zend_string_free(buffer);
             break;
         }
-        skyray_protocol_on_data_received(&protocol, buffer);
+        skyray_stream_on_data(stream_intern, buffer);
         zend_string_free(buffer);
     }
-
-    skyray_protocol_on_stream_closed(&protocol);
 
     RETURN_OBJ(Z_OBJ(protocol));
 }
