@@ -10,6 +10,7 @@
 
 
 #include "src/skyray.h"
+#include "uv.h"
 
 extern zend_class_entry *skyray_ce_Stream;
 
@@ -23,9 +24,18 @@ typedef enum _skyray_stream_status {
 #define SKYRAY_STREAM_WRITABLE 2
 
 typedef struct _skyray_stream {
-    int fd;
-    int rw_mask;
-    skyray_stream_status_t status;
+    int blocking;
+    union {
+        struct {
+            int fd;
+            int rw_mask;
+            skyray_stream_status_t status;
+        } blk;
+        uv_tcp_t tcp;
+        uv_pipe_t pipe;
+        uv_udp_t udp;
+    } impl;
+
     zval protocol;
     zend_object std;
 }skyray_stream_t;

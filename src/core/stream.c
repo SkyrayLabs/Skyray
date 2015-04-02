@@ -14,9 +14,6 @@ zend_object * skyray_stream_object_new(zend_class_entry *ce)
 {
     skyray_stream_t *intern;
     intern = ecalloc(1, sizeof(skyray_stream_t) + zend_object_properties_size(ce));
-    intern->fd = 0;
-    intern->status = SKYRAY_STREAM_STATUS_OPENING;
-    intern->rw_mask = 0;
     ZVAL_NULL(&intern->protocol);
 
     zend_object_std_init(&intern->std, ce);
@@ -32,26 +29,29 @@ void skyray_stream_object_free(zend_object *object)
     zend_object_std_dtor(&intern->std);
 }
 
-void skyray_stream_init(skyray_stream_t *self, int fd, zend_object *protocol)
+void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *protocol)
 {
-    self->fd = fd;
+    self->blocking = 1;
+    self->impl.blk.fd = fd;
+    self->impl.blk.status = SKYRAY_STREAM_STATUS_OPENING;
+    self->impl.blk.rw_mask = 0;
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
     }
 }
 
-int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
+static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buffer)
 {
-    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
         skyray_throw_exception("Unable to write data to closed stream.");
         return -1;
     }
-    if (!(self->rw_mask & SKYRAY_STREAM_WRITABLE)) {
+    if (!(self->impl.blk.rw_mask & SKYRAY_STREAM_WRITABLE)) {
         skyray_throw_exception("The stream is not writable.");
         return -1;
     }
 
-    int ret = write(self->fd, buffer->val, buffer->len);
+    int ret = write(self->impl.blk.fd, buffer->val, buffer->len);
     if (ret < 0) {
         skyray_throw_exception_from_errno(errno);
         return -1;
@@ -60,21 +60,31 @@ int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
     }
 }
 
-zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
+int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
 {
-    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+    int result = -1;
+    if (self->blocking) {
+        result = _skyray_stream_write_blocking(self, buffer);
+    }
+
+    return result;
+}
+
+static zend_string * _skyray_stream_read_blocking(skyray_stream_t * self, zend_bool slient)
+{
+    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
         !slient && skyray_throw_exception("Unable to read data from closed stream.");
         return NULL;
     }
 
-    if (!(self->rw_mask & SKYRAY_STREAM_READABLE)) {
+    if (!(self->impl.blk.rw_mask & SKYRAY_STREAM_READABLE)) {
         !slient && skyray_throw_exception("The stream is not readable.");
         return NULL;
     }
 
     zend_string *buffer = zend_string_alloc(8192, 0);
 
-    int ret = read(self->fd, buffer->val, 8192);
+    int ret = read(self->impl.blk.fd, buffer->val, 8192);
     if (ret < 0) {
         zend_string_free(buffer);
         !slient && skyray_throw_exception_from_errno(errno);
@@ -90,6 +100,15 @@ zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
     return buffer;
 }
 
+zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
+{
+    if (self->blocking) {
+        return _skyray_stream_read_blocking(self, slient);
+    } else {
+        return NULL;
+    }
+}
+
 void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer)
 {
     if (!ZVAL_IS_NULL(&self->protocol)) {
@@ -99,8 +118,10 @@ void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer)
 
 void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
 {
-    self->status = SKYRAY_STREAM_STATUS_OPENED;
-    self->rw_mask = rw_mask;
+    if (self->blocking) {
+        self->impl.blk.status = SKYRAY_STREAM_STATUS_OPENED;
+        self->impl.blk.rw_mask = rw_mask;
+    }
 
     if (!ZVAL_IS_NULL(&self->protocol)) {
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
@@ -110,25 +131,38 @@ void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
 
 void skyray_stream_on_closed(skyray_stream_t *self)
 {
-    self->status = SKYRAY_STREAM_STATUS_CLOSED;
-    self->rw_mask = 0;
+    if (self->blocking) {
+        self->impl.blk.status = SKYRAY_STREAM_STATUS_CLOSED;
+        self->impl.blk.rw_mask = 0;
+    }
+
     if (!ZVAL_IS_NULL(&self->protocol)) {
         skyray_protocol_on_stream_closed(&self->protocol);
     }
 }
 
-zend_bool skyray_stream_close(skyray_stream_t *self)
+zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
 {
-    if (self->status == SKYRAY_STREAM_STATUS_CLOSED) {
+    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
         return 1;
     }
-    if (close(self->fd) < 0) {
+    if (close(self->impl.blk.fd) < 0) {
         skyray_throw_exception_from_errno(errno);
         return 0;
     }
     skyray_stream_on_closed(self);
 
     return 1;
+}
+
+zend_bool skyray_stream_close(skyray_stream_t *self)
+{
+    zend_bool result;
+    if (self->blocking) {
+        result = _skyray_stream_close_blocking(self);
+    }
+
+    return result;
 }
 
 SKYRAY_METHOD(stream, __construct)

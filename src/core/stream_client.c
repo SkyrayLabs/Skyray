@@ -85,6 +85,43 @@ int stream_client_do_connect(char *host, int port)
     return fd;
 }
 
+void stream_client_do_connect_blocking(
+        skyray_stream_client_t *self, zend_object *protocol_obj,
+        zend_string *host, zend_long port, zval *return_value)
+{
+    int fd = stream_client_do_connect(host->val, port);
+
+    if (fd < 0) {
+        return;
+    }
+
+    object_init_ex(return_value, skyray_ce_Stream);
+    zend_object *stream = Z_OBJ_P(return_value);
+
+    skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
+    skyray_stream_init_blocking(stream_intern, fd, protocol_obj);
+
+    skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
+
+    if (!self->protocol_creator) {
+        RETURN_OBJ(stream);
+        return;
+    }
+
+    zend_string *buffer;
+
+    while((buffer = skyray_stream_read(stream_intern, 0))) {
+        if (buffer->len == 0) {
+            zend_string_free(buffer);
+            break;
+        }
+        skyray_stream_on_data(stream_intern, buffer);
+        zend_string_free(buffer);
+    }
+
+    RETURN_OBJ(protocol_obj);
+}
+
 SKYRAY_METHOD(stream_client, connectTCP)
 {
     zend_string *host;
@@ -107,38 +144,10 @@ SKYRAY_METHOD(stream_client, connectTCP)
         ZVAL_OBJ(&protocol, protocol_obj);
     }
 
-    int fd = stream_client_do_connect(host->val, port);
-
-    if (fd < 0) {
-        return;
+    if (!intern->reactor) {
+        stream_client_do_connect_blocking(intern, protocol_obj, host, port, return_value);
     }
 
-    object_init_ex(return_value, skyray_ce_Stream);
-    zend_object *stream = Z_OBJ_P(return_value);
-
-    skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
-
-    skyray_stream_init(stream_intern, fd, protocol_obj);
-
-    skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
-
-    if (!intern->protocol_creator) {
-        RETURN_OBJ(stream);
-        return;
-    }
-
-    zend_string *buffer;
-
-    while((buffer = skyray_stream_read(stream_intern, 0))) {
-        if (buffer->len == 0) {
-            zend_string_free(buffer);
-            break;
-        }
-        skyray_stream_on_data(stream_intern, buffer);
-        zend_string_free(buffer);
-    }
-
-    RETURN_OBJ(Z_OBJ(protocol));
 }
 
 SKYRAY_METHOD(stream_client, createPipe)
@@ -164,8 +173,8 @@ SKYRAY_METHOD(stream_client, createPipe)
     skyray_stream_t * intern1 = skyray_stream_from_obj(Z_OBJ_P(stream1));
     skyray_stream_t * intern2 = skyray_stream_from_obj(Z_OBJ_P(stream2));
 
-    intern1->fd = fds[0];
-    intern2->fd = fds[1];
+    skyray_stream_init_blocking(intern1, fds[0], NULL);
+    skyray_stream_init_blocking(intern2, fds[1], NULL);
 
     skyray_stream_on_opened(intern1, SKYRAY_STREAM_READABLE);
     skyray_stream_on_opened(intern2, SKYRAY_STREAM_WRITABLE);
