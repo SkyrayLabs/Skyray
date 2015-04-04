@@ -6,9 +6,13 @@
  */
 
 #include "stream.h"
+#include "reactor.h"
+#include "uv.h"
 
 zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
+
+
 
 zend_object * skyray_stream_object_new(zend_class_entry *ce)
 {
@@ -37,6 +41,18 @@ void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *pro
     self->impl.blk.rw_mask = 0;
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
+        skyray_protocol_on_connect_stream(&self->protocol, &self->std);
+    }
+}
+
+void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *reactor, zend_object *protocol)
+{
+    self->blocking = 0;
+    uv_tcp_init(&reactor->loop, &self->impl.tcp);
+
+    if (protocol) {
+        ZVAL_OBJ(&self->protocol, protocol);
+        skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
 
@@ -60,11 +76,24 @@ static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buf
     }
 }
 
+static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *buffer)
+{
+    uv_tcp_t *tcp = &self->impl.tcp;
+
+    uv_buf_t bufs[1];
+    bufs[0].base = buffer->val;
+    bufs[0].len  = buffer->len;
+
+    return uv_try_write((uv_stream_t *)tcp, bufs, 1); // TODO EAGAIN
+}
+
 int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
 {
     int result = -1;
     if (self->blocking) {
         result = _skyray_stream_write_blocking(self, buffer);
+    } else {
+        result = _skyray_stream_write_nonblocking(self, buffer);
     }
 
     return result;
@@ -105,6 +134,7 @@ zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient)
     if (self->blocking) {
         return _skyray_stream_read_blocking(self, slient);
     } else {
+        !slient && skyray_throw_exception("Unable to read from non-blocking stream directly.");
         return NULL;
     }
 }
@@ -124,7 +154,6 @@ void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
     }
 
     if (!ZVAL_IS_NULL(&self->protocol)) {
-        skyray_protocol_on_connect_stream(&self->protocol, &self->std);
         skyray_protocol_on_stream_connected(&self->protocol);
     }
 }
@@ -172,14 +201,13 @@ SKYRAY_METHOD(stream, __construct)
 
 SKYRAY_METHOD(stream, write)
 {
-    zend_string *data = 0;
+    zend_string *data = NULL;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &data) == FAILURE) {
         return;
     }
 
     skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
-
     int written = skyray_stream_write(intern, data);
     RETURN_BOOL(written != -1);
 }

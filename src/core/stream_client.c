@@ -8,6 +8,7 @@
 #include "stream_client.h"
 #include "protocol.h"
 #include "stream.h"
+#include "reactor.h"
 
 zend_class_entry *skyray_ce_StreamClient;
 zend_object_handlers skyray_handler_StreamClient;
@@ -20,7 +21,6 @@ zend_object * skyray_stream_client_object_new(zend_class_entry *ce)
 {
     skyray_stream_client_t *intern;
     intern = ecalloc(1, sizeof(skyray_stream_client_t) + zend_object_properties_size(ce));
-
 
     zend_object_std_init(&intern->std, ce);
     object_properties_init(&intern->std, ce);
@@ -36,6 +36,9 @@ void skyray_stream_client_object_free(zend_object *object)
 
     if (intern->protocol_creator) {
         efree(intern->protocol_creator);
+    }
+    if (intern->reactor) {
+        efree(intern->reactor);
     }
 }
 
@@ -58,6 +61,10 @@ SKYRAY_METHOD(stream_client, __construct)
     if (protocol_creator && Z_TYPE_P(protocol_creator) != IS_NULL) {
         intern->protocol_creator = emalloc(sizeof(zval));
         ZVAL_COPY(intern->protocol_creator, protocol_creator);
+    }
+    if (reactor && Z_TYPE_P(reactor) != IS_NULL) {
+        intern->reactor = emalloc(sizeof(zval));
+        ZVAL_COPY(intern->reactor, reactor);
     }
 }
 
@@ -122,6 +129,66 @@ void stream_client_do_connect_blocking(
     RETURN_OBJ(protocol_obj);
 }
 
+static void alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
+{
+    buf->base = emalloc(suggested_size);
+    buf->len = suggested_size;
+}
+
+static void read_cb(uv_stream_t* uv_stream, ssize_t nread, const uv_buf_t* buf)
+{
+    skyray_stream_t *stream = uv_stream->data;
+
+    if (nread < 0) {
+        if (nread == UV_EOF) {
+            skyray_protocol_on_stream_closed(&stream->protocol);
+        } else {
+            // TODO error handing
+            printf("error: %d - %s\n", nread, uv_strerror(nread));
+        }
+        goto clean;
+    }
+
+    zend_string *data = zend_string_init(buf->base, nread, 0);
+    skyray_protocol_on_data_received(&stream->protocol, data);
+    zend_string_free(data);
+
+clean:
+    efree(buf->base);
+}
+
+static void on_connected(uv_connect_t *req, int status)
+{
+    skyray_stream_t *stream = req->data;
+    skyray_protocol_on_stream_connected(&stream->protocol);
+    req->handle->data = req->data;
+    uv_read_start(req->handle, alloc_cb, read_cb);
+    efree(req);
+}
+
+void stream_client_do_connect_nonblocking(
+        skyray_stream_client_t *self, zend_object *protocol_obj,
+        zend_string *host, zend_long port, zval *return_value)
+{
+    skyray_reactor_t *reactor = skyray_reactor_from_obj(Z_OBJ_P(self->reactor));
+
+    object_init_ex(return_value, skyray_ce_Stream);
+
+    skyray_stream_t * stream = skyray_stream_from_obj(Z_OBJ_P(return_value));
+
+    skyray_stream_init_nonblocking(stream, reactor, protocol_obj);
+
+    struct sockaddr_in addr;
+
+    uv_ip4_addr(host->val, port, &addr);
+
+    uv_connect_t *req = (uv_connect_t*)emalloc(sizeof(uv_connect_t));
+    req->type = UV_TCP;
+    req->data = stream;
+
+    uv_tcp_connect(req, &stream->impl.tcp, (struct sockaddr*)&addr, on_connected);
+}
+
 SKYRAY_METHOD(stream_client, connectTCP)
 {
     zend_string *host;
@@ -146,8 +213,9 @@ SKYRAY_METHOD(stream_client, connectTCP)
 
     if (!intern->reactor) {
         stream_client_do_connect_blocking(intern, protocol_obj, host, port, return_value);
+    } else {
+        stream_client_do_connect_nonblocking(intern, protocol_obj, host, port, return_value);
     }
-
 }
 
 SKYRAY_METHOD(stream_client, createPipe)

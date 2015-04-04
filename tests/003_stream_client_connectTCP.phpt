@@ -33,6 +33,7 @@ echo "==== test with protocol ====\n";
 class MyProtocol implements ProtocolInterface
 {
     protected $stream;
+    protected $data = '';
 
     public function connectStream($stream)
     {
@@ -46,11 +47,12 @@ class MyProtocol implements ProtocolInterface
 
     public function dataReceived($data)
     {
-        echo explode("\r\n", $data)[0] . PHP_EOL;
+        $this->data .= $data;
     }
 
     public function streamClosed()
     {
+        echo explode("\r\n", $this->data)[0] . PHP_EOL;
         echo "closed\n";
     }
 }

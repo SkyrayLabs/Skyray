@@ -12,11 +12,6 @@ zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;
 
 
-static inline skyray_reactor_t *skyray_reactor_from_obj(zend_object *obj) {
-    return (skyray_reactor_t*)((char*)(obj) - XtOffsetOf(skyray_reactor_t, std));
-}
-
-
 zend_object * skyray_reactor_object_new(zend_class_entry *ce)
 {
     skyray_reactor_t *intern;
