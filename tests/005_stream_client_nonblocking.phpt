@@ -9,10 +9,20 @@ use skyray\core\StreamClient;
 use skyray\core\SkyrayException;
 use skyray\core\ProtocolInterface;
 
+set_exception_handler(function ($e) {
+    echo '[error]: ' . $e->getMessage();
+});
+
 class MyProtocol implements ProtocolInterface
 {
     protected $stream;
     protected $data = '';
+    protected $closeOnConnect;
+
+    public function __construct($closeOnConnect = false)
+    {
+        $this->closeOnConnect = $closeOnConnect;
+    }
 
     public function connectStream($stream)
     {
@@ -22,6 +32,9 @@ class MyProtocol implements ProtocolInterface
     public function streamConnected()
     {
         var_dump('connected');
+        if ($this->closeOnConnect) {
+            $this->stream->close();
+        }
         $this->stream->write("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");
     }
 
@@ -32,7 +45,9 @@ class MyProtocol implements ProtocolInterface
 
     public function streamClosed()
     {
-        echo explode("\r\n", $this->data)[0] . PHP_EOL;
+        if ($this->data) {
+            echo explode("\r\n", $this->data)[0] . PHP_EOL;
+        }
         echo "closed\n";
     }
 }
@@ -46,9 +61,34 @@ $client = new StreamClient(function () {
 $s = $client->connectTCP('127.0.0.1', 2333);
 echo get_class($s) . PHP_EOL;
 $reactor->run();
+
+
+echo "====================\n";
+
+$reactor = new Reactor();
+
+$client = new StreamClient(function () {
+    return new MyProtocol(true);
+}, $reactor);
+
+
+$s = $client->connectTCP('127.0.0.1', 2333);
+
+echo get_class($s) . PHP_EOL;
+$reactor->addTimer(200, function () {
+    var_dump('timer');
+});
+$reactor->run();
+
 ?>
 --EXPECTF--
 skyray\core\Stream
 string(9) "connected"
 HTTP/1.1 404 Not Found
 closed
+====================
+skyray\core\Stream
+string(9) "connected"
+[error]: Unable to write to stream, the stream may already closed
+closed
+string(5) "timer"

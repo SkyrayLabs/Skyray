@@ -7,6 +7,31 @@
 zend_class_entry * skyray_ce_SkyrayException;
 zend_class_entry * skyray_ce_ProtocolInterface;
 
+
+void skyray_handle_uncaught_exception(zend_object *old_exception)
+{
+    EG(exception) = NULL;
+    if (Z_TYPE(EG(user_exception_handler)) != IS_UNDEF) {
+        zval orig_user_exception_handler;
+        zval params[1], retval2;
+        ZVAL_OBJ(&params[0], old_exception);
+        ZVAL_COPY_VALUE(&orig_user_exception_handler, &EG(user_exception_handler));
+        ZVAL_UNDEF(&retval2);
+        if (call_user_function_ex(CG(function_table), NULL, &orig_user_exception_handler, &retval2, 1, params, 1, NULL) == SUCCESS) {
+            zval_ptr_dtor(&retval2);
+            OBJ_RELEASE(old_exception);
+            if (EG(exception)) {
+                zend_exception_error(EG(exception), E_ERROR);
+            }
+        } else {
+            zend_exception_error(old_exception, E_ERROR);
+        }
+    } else {
+        zend_exception_error(old_exception, E_ERROR);
+    }
+}
+
+
 PHP_MINIT_FUNCTION(skyray_interfaces)
 {
     zend_class_entry ce;

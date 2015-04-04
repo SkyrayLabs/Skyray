@@ -19,6 +19,10 @@ void skyray_protocol_on_connect_stream(zval *protocol, zend_object *stream)
 
     call_user_function(EG(function_table), protocol, &function_name, &retval, 1, params);
     zval_dtor(&function_name);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
 }
 
 void skyray_protocol_on_stream_connected(zval *protocol)
@@ -28,8 +32,12 @@ void skyray_protocol_on_stream_connected(zval *protocol)
 
     ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("streamConnected"), 0));
 
-    call_user_function(EG(function_table), protocol, &function_name, &retval, 0, NULL);
+    int result = call_user_function(EG(function_table), protocol, &function_name, &retval, 0, NULL);
     zval_dtor(&function_name);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
 }
 
 void skyray_protocol_on_data_received(zval *protocol, zend_string *data)
@@ -45,6 +53,10 @@ void skyray_protocol_on_data_received(zval *protocol, zend_string *data)
 
     call_user_function(EG(function_table), protocol, &function_name, &retval, 1, params);
     zval_dtor(&function_name);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
 }
 
 void skyray_protocol_on_stream_closed(zval *protocol)
@@ -56,6 +68,10 @@ void skyray_protocol_on_stream_closed(zval *protocol)
 
     call_user_function(EG(function_table), protocol, &function_name, &retval, 0, NULL);
     zval_dtor(&function_name);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
 }
 
 
@@ -63,6 +79,10 @@ zend_object * skyray_protocol_create_from_factory(zval *creator)
 {
     zval protocol;
     call_user_function(EG(function_table), NULL, creator, &protocol, 0, NULL);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
 
     if (!instanceof_function(Z_OBJCE(protocol), skyray_ce_ProtocolInterface)) {
         skyray_throw_exception("The protocol created by $protocolCreator must be instance of 'skyray\\core\\ProtocolInterface'");

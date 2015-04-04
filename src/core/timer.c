@@ -55,6 +55,10 @@ static void timer_callback(uv_timer_t *uv_timer)
     ZVAL_OBJ(&params[0], &timer->std);
     call_user_function(EG(function_table), NULL, &timer->callback, &retval, 1, params);
 
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+    }
+
     if (uv_timer_get_repeat(&timer->timer) == 0) {
         zval_delref_p(&params[0]);
     }

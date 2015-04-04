@@ -7,11 +7,9 @@
 
 #include "stream.h"
 #include "reactor.h"
-#include "uv.h"
 
 zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
-
 
 
 zend_object * skyray_stream_object_new(zend_class_entry *ce)
@@ -49,6 +47,7 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *rea
 {
     self->blocking = 0;
     uv_tcp_init(&reactor->loop, &self->impl.tcp);
+    self->impl.tcp.data = self;
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
@@ -76,15 +75,38 @@ static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buf
     }
 }
 
+static void write_cb(uv_write_t *req, int status)
+{
+    skyray_stream_t *stream = req->handle->data;
+    if (status < 0) {
+        // TODO error handing
+    }
+    efree(req);
+}
+
 static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *buffer)
 {
     uv_tcp_t *tcp = &self->impl.tcp;
+
+    if ((tcp->flags & UV_CLOSING) || (tcp->flags & UV_CLOSED)) {
+        skyray_throw_exception("Unable to write to stream, the stream may already closed\n");
+        return 0;
+    }
+
+    uv_write_t *req = emalloc(sizeof(uv_write_t));
+    req->type = UV_WRITE;
 
     uv_buf_t bufs[1];
     bufs[0].base = buffer->val;
     bufs[0].len  = buffer->len;
 
-    return uv_try_write((uv_stream_t *)tcp, bufs, 1); // TODO EAGAIN
+    int result = uv_write(req, tcp, bufs, 1, write_cb);
+
+    if (result < 0) {
+        skyray_throw_exception_from_errno(errno);
+    }
+
+    return result >= 0;
 }
 
 int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
@@ -184,11 +206,25 @@ zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
     return 1;
 }
 
+static void close_cb(uv_stream_t *uv_stream)
+{
+    skyray_stream_t *stream = uv_stream->data;
+    skyray_stream_on_closed(stream);
+}
+
+zend_bool _skyray_stream_close_nonblocking(skyray_stream_t *self)
+{
+    uv_close(&self->impl.tcp, close_cb);
+    return 1;
+}
+
 zend_bool skyray_stream_close(skyray_stream_t *self)
 {
     zend_bool result;
     if (self->blocking) {
         result = _skyray_stream_close_blocking(self);
+    } else {
+        result = _skyray_stream_close_nonblocking(self);
     }
 
     return result;
