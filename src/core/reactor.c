@@ -17,7 +17,6 @@ zend_object * skyray_reactor_object_new(zend_class_entry *ce)
     skyray_reactor_t *intern;
     intern = ecalloc(1, sizeof(skyray_reactor_t) + zend_object_properties_size(ce));
 
-
     zend_object_std_init(&intern->std, ce);
     object_properties_init(&intern->std, ce);
 
@@ -37,6 +36,11 @@ void skyray_reactor_object_free(zend_object *object)
 int skyray_reactor_run(skyray_reactor_t *self)
 {
     return uv_run(&self->loop, UV_RUN_DEFAULT);
+}
+
+void skyray_reactor_stop(skyray_reactor_t *self)
+{
+    uv_stop(&self->loop);
 }
 
 SKYRAY_METHOD(reactor, __construct)
@@ -168,6 +172,15 @@ SKYRAY_METHOD(reactor, run)
     skyray_reactor_run(intern);
 }
 
+SKYRAY_METHOD(reactor, stop)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+
+    skyray_reactor_t *intern = skyray_reactor_from_obj(Z_OBJ_P(getThis()));
+    skyray_reactor_stop(intern);
+}
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
@@ -223,6 +236,7 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(reactor, addPeriodicTimer, arginfo_addTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, run, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(reactor, stop, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_FE_END
 };
 

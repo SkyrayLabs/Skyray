@@ -112,4 +112,12 @@ class Reactor
     {
 
     }
+
+    /**
+     * Stop the reactor, causing Reactor::run() to end as soon as possible.
+     */
+    public function stop()
+    {
+
+    }
 }
