@@ -11,7 +11,6 @@
 zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
 
-
 zend_object * skyray_stream_object_new(zend_class_entry *ce)
 {
     skyray_stream_t *intern;
@@ -102,7 +101,7 @@ static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *
     bufs[0].base = buffer->val;
     bufs[0].len  = buffer->len;
 
-    int result = uv_write(req, tcp, bufs, 1, write_cb);
+    int result = uv_write(req, (uv_stream_t *)tcp, bufs, 1, write_cb);
 
     if (result < 0) {
         skyray_throw_exception_from_errno(errno);
@@ -213,15 +212,15 @@ zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
     return 1;
 }
 
-static void close_cb(uv_stream_t *uv_stream)
+static void close_cb(uv_handle_t *uv_stream)
 {
-    skyray_stream_t *stream = uv_stream->data;
+    skyray_stream_t *stream = (skyray_stream_t *)uv_stream;
     skyray_stream_on_closed(stream);
 }
 
 zend_bool _skyray_stream_close_nonblocking(skyray_stream_t *self)
 {
-    uv_close(&self->impl.tcp, close_cb);
+    uv_close((uv_handle_t *)&self->impl.tcp, close_cb);
     return 1;
 }
 

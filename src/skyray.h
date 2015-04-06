@@ -15,6 +15,7 @@
 #include "php.h"
 #include "php_ini.h"
 #include "ext/standard/info.h"
+#include "Zend/zend_exceptions.h"
 #include <netinet/in.h>
 #include "uv.h"
 

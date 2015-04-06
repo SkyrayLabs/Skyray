@@ -137,9 +137,9 @@ static void alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
     buf->len = suggested_size;
 }
 
-static void close_cb(uv_stream_t* uv_stream)
+static void close_cb(uv_handle_t* uv_stream)
 {
-    skyray_stream_t *stream = uv_stream->data;
+    skyray_stream_t *stream = (skyray_stream_t *)uv_stream;
     skyray_protocol_on_stream_closed(&stream->protocol);
 }
 
@@ -150,10 +150,10 @@ static void read_cb(uv_stream_t* uv_stream, ssize_t nread, const uv_buf_t* buf)
     if (nread < 0) {
         if (nread != UV_EOF) {
             // TODO error handing
-            printf("error: %d - %s\n", nread, uv_strerror(nread));
+            printf("error: %ld - %s\n", nread, uv_strerror(nread));
         }
 
-        uv_close(uv_stream, close_cb);
+        uv_close((uv_handle_t *)uv_stream, close_cb);
         goto clean;
     }
 
