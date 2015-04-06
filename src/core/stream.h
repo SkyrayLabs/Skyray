@@ -24,7 +24,6 @@ typedef enum _skyray_stream_status {
 #define SKYRAY_STREAM_WRITABLE 2
 
 typedef struct _skyray_stream {
-    int blocking;
     union {
         struct {
             int fd;
@@ -35,7 +34,7 @@ typedef struct _skyray_stream {
         uv_pipe_t pipe;
         uv_udp_t udp;
     } impl;
-
+    int blocking;
     zval protocol;
     zend_object std;
 }skyray_stream_t;

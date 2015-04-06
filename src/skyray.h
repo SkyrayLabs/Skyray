@@ -45,12 +45,12 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 #define skyray_throw_exception(format, ...)  \
     zend_throw_exception_ex(skyray_ce_SkyrayException, 0, format, ## __VA_ARGS__)
 
-inline int skyray_throw_exception_from_errno(int errno)
+static inline int skyray_throw_exception_from_errno(int errcode)
 {
-    if (errno > 0) {
-        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%d] %s", errno, strerror(errno));
+    if (errcode > 0) {
+        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%d] %s", errcode, strerror(errcode));
     } else {
-        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%s] %s", uv_err_name(errno), uv_strerror(errno));
+        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%s] %s", uv_err_name(errcode), uv_strerror(errcode));
     }
 
     return 1;

@@ -102,8 +102,10 @@ void stream_client_do_connect_blocking(
         return;
     }
 
-    object_init_ex(return_value, skyray_ce_Stream);
-    zend_object *stream = Z_OBJ_P(return_value);
+    zval zstream;
+
+    object_init_ex(&zstream, skyray_ce_Stream);
+    zend_object *stream = Z_OBJ_P(&zstream);
 
     skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
     skyray_stream_init_blocking(stream_intern, fd, protocol_obj);
@@ -111,7 +113,7 @@ void stream_client_do_connect_blocking(
     skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
 
     if (!self->protocol_creator) {
-        RETURN_OBJ(stream);
+        ZVAL_COPY(return_value, &zstream);
         return;
     }
 
@@ -177,10 +179,11 @@ void stream_client_do_connect_nonblocking(
         zend_string *host, zend_long port, zval *return_value)
 {
     skyray_reactor_t *reactor = skyray_reactor_from_obj(Z_OBJ_P(self->reactor));
+    zval zstream;
 
-    object_init_ex(return_value, skyray_ce_Stream);
+    object_init_ex(&zstream, skyray_ce_Stream);
 
-    skyray_stream_t * stream = skyray_stream_from_obj(Z_OBJ_P(return_value));
+    skyray_stream_t * stream = skyray_stream_from_obj(Z_OBJ(zstream));
 
     skyray_stream_init_nonblocking(stream, reactor, protocol_obj);
 
@@ -193,6 +196,8 @@ void stream_client_do_connect_nonblocking(
     req->data = stream;
 
     uv_tcp_connect(req, &stream->impl.tcp, (struct sockaddr*)&addr, on_connected);
+
+    ZVAL_COPY(return_value, &zstream);
 }
 
 SKYRAY_METHOD(stream_client, connectTCP)
@@ -255,6 +260,9 @@ SKYRAY_METHOD(stream_client, createPipe)
 
     add_index_zval(return_value, 0, stream1);
     add_index_zval(return_value, 1, stream2);
+
+    zval_add_ref(stream1);
+    zval_add_ref(stream2);
 
     efree(stream1);
     efree(stream2);

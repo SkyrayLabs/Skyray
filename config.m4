@@ -68,6 +68,7 @@ if test "$PHP_SKYRAY" != "no"; then
     src/core/timer.c                \
     src/core/protocol.c             \
     src/core/stream_client.c        \
+    src/core/stream_server.c        \
     src/core/stream.c               \
     src/processing/process.c        \
   "

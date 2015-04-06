@@ -39,6 +39,7 @@ void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *pro
     self->impl.blk.rw_mask = 0;
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
+        zval_addref_p(&self->protocol);
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
@@ -51,6 +52,7 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *rea
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
+        zval_addref_p(&self->protocol);
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
@@ -190,6 +192,11 @@ void skyray_stream_on_closed(skyray_stream_t *self)
     if (!ZVAL_IS_NULL(&self->protocol)) {
         skyray_protocol_on_stream_closed(&self->protocol);
     }
+
+    if (!ZVAL_IS_NULL(&self->protocol)) {
+        zend_object_release(Z_OBJ(self->protocol));
+    }
+    zend_object_release(&self->std);
 }
 
 zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
