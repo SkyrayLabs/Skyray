@@ -56,6 +56,30 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *rea
     }
 }
 
+zend_bool skyray_stream_is_readable(skyray_stream_t *self)
+{
+    zend_bool result;
+    if (self->blocking) {
+        result = self->impl.blk.status == SKYRAY_STREAM_STATUS_OPENED && (self->impl.blk.rw_mask & SKYRAY_STREAM_READABLE);
+    } else {
+        result = uv_is_active((uv_handle_t *)&self->impl.tcp) && uv_is_readable((uv_stream_t *)&self->impl.tcp);
+    }
+
+    return result;
+}
+
+zend_bool skyray_stream_is_writable(skyray_stream_t *self)
+{
+    zend_bool result;
+    if (self->blocking) {
+        result = self->impl.blk.status == SKYRAY_STREAM_STATUS_OPENED && (self->impl.blk.rw_mask & SKYRAY_STREAM_WRITABLE);
+    } else {
+        result = uv_is_active((uv_handle_t *)&self->impl.tcp) && uv_is_writable((uv_stream_t *)&self->impl.tcp);
+    }
+
+    return result;
+}
+
 static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buffer)
 {
     if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
@@ -236,6 +260,47 @@ zend_bool skyray_stream_close(skyray_stream_t *self)
     return result;
 }
 
+inline int skyray_stream_fd(skyray_stream_t *self)
+{
+    return self->blocking ? self->impl.blk.fd : self->impl.tcp.io_watcher.fd;
+}
+
+static inline zend_array * sockaddr_to_array(struct sockaddr_in *addr)
+{
+    zval result;
+    char host[64] = {0};
+    uv_ip4_name(addr, host, sizeof(struct sockaddr_in));
+
+    array_init(&result);
+    add_assoc_string(&result, "type", "tcp");
+    add_assoc_string(&result, "host", host);
+    add_assoc_long(&result, "port", ntohs(addr->sin_port));
+
+    return Z_ARR(result);
+}
+
+zend_array *skyray_stream_get_peername(skyray_stream_t *self)
+{
+    struct sockaddr_in addr;
+    socklen_t socklen = sizeof(addr);
+    if (getpeername(skyray_stream_fd(self), &addr, &socklen) < 0) {
+        return NULL;
+    }
+
+    return sockaddr_to_array(&addr);
+}
+
+zend_array *skyray_stream_get_sockname(skyray_stream_t *self)
+{
+    struct sockaddr_in addr;
+    socklen_t socklen = sizeof(addr);
+    if (getsockname(skyray_stream_fd(self), &addr, &socklen) < 0) {
+        return NULL;
+    }
+
+    return sockaddr_to_array(&addr);
+}
+
 SKYRAY_METHOD(stream, __construct)
 {
 
@@ -282,11 +347,66 @@ SKYRAY_METHOD(stream, close)
     RETURN_TRUE;
 }
 
+SKYRAY_METHOD(stream, isReadable)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
-    ZEND_ARG_INFO(0, callable)
-    ZEND_ARG_INFO(0, args)
-ZEND_END_ARG_INFO()
+    RETURN_BOOL(skyray_stream_is_readable(intern));
+}
+
+SKYRAY_METHOD(stream, isWritable)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    RETURN_BOOL(skyray_stream_is_writable(intern));
+}
+
+SKYRAY_METHOD(stream, isBlocking)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    RETURN_BOOL(intern->blocking);
+}
+
+SKYRAY_METHOD(stream, getPeerName)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    zend_array *name = skyray_stream_get_peername(intern);
+    if (!name) {
+        RETURN_FALSE;
+    } else {
+        ZVAL_ARR(return_value, name);
+    }
+}
+
+SKYRAY_METHOD(stream, getSockName)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    zend_array *name = skyray_stream_get_sockname(intern);
+    if (!name) {
+        RETURN_FALSE;
+    } else {
+        ZVAL_ARR(return_value, name);
+    }
+}
+
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_write, 0, 0, 1)
     ZEND_ARG_INFO(0, obj)
@@ -294,10 +414,15 @@ ZEND_END_ARG_INFO()
 
 
 static const zend_function_entry class_methods[] = {
-    SKYRAY_ME(stream, __construct, arginfo___construct, ZEND_ACC_PRIVATE | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, __construct, arginfo_empty, ZEND_ACC_PRIVATE | ZEND_ACC_CTOR)
     SKYRAY_ME(stream, write, arginfo_write, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(stream, read, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(stream, close, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, isReadable, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, isWritable, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, isBlocking, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, getPeerName, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, getSockName, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_FE_END
 };
 
