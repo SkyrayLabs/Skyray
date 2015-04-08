@@ -33,8 +33,8 @@ $reactor->run();
 
 ?>
 --EXPECTF--
-[server]: connected
-[client]: connected
+[%s]: connected
+[%s]: connected
 [client]: received data: hello
 [client]: closed
 [server]: closed

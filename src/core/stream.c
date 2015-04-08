@@ -260,7 +260,7 @@ zend_bool skyray_stream_close(skyray_stream_t *self)
     return result;
 }
 
-inline int skyray_stream_fd(skyray_stream_t *self)
+static inline int skyray_stream_fd(skyray_stream_t *self)
 {
     return self->blocking ? self->impl.blk.fd : self->impl.tcp.io_watcher.fd;
 }
