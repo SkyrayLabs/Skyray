@@ -8,14 +8,17 @@ use skyray\core\StreamClient;
 use skyray\processing\Process;
 use skyray\core\ProtocolInterface;
 
+require_once __DIR__ . '/includes/SimpleHttpServer.php';
+
 function start_http_server()
 {
-    exec('php -S 0.0.0.0:2333 > /dev/null 2>&1');
+    $server = new SimpleHttpServer('0.0.0.0', 2333);
+    $server->start();
 }
 
 $process = new Process('start_http_server');
 $process->start();
-sleep(1);
+usleep(200000);
 
 echo "==== test without protocol ====\n";
 $client = new StreamClient(null);
@@ -27,7 +30,6 @@ echo explode("\r\n", $data)[0] . PHP_EOL;
 echo "==== done ====\n\n";
 
 echo "==== test with protocol ====\n";
-
 
 
 class MyProtocol implements ProtocolInterface

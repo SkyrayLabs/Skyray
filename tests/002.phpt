@@ -7,14 +7,17 @@ Test for Stream::getPeerName() & Stream::getSockName()
 use skyray\core\StreamClient;
 use skyray\processing\Process;
 
+require_once __DIR__ . '/includes/SimpleHttpServer.php';
+
 function start_http_server()
 {
-    exec('php -S 0.0.0.0:2333 > /dev/null 2>&1');
+    $server = new SimpleHttpServer('0.0.0.0', 2333);
+    $server->start();
 }
 
 $process = new Process('start_http_server');
 $process->start();
-sleep(1);
+usleep(200000);
 
 $client = new StreamClient(null);
 $stream = $client->connectTCP('127.0.0.1', 2333);
