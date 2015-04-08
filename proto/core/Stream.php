@@ -89,6 +89,16 @@ class Stream
     }
 
     /**
+     * Sets the protocol used by the stream.
+     *
+     * @param ProtocolInterface $protocol
+     */
+    public function setProtocol(ProtocolInterface $protocol)
+    {
+
+    }
+
+    /**
      * The the socket name of the peer endpoint of the stream.
      *
      * @return array

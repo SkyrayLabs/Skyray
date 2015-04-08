@@ -301,6 +301,17 @@ zend_array *skyray_stream_get_sockname(skyray_stream_t *self)
     return sockaddr_to_array(&addr);
 }
 
+void skyray_stream_set_protocol(skyray_stream_t *self, zval *protocol)
+{
+    if (!ZVAL_IS_NULL(&self->protocol)) {
+        zend_object_release(Z_OBJ(self->protocol));
+    }
+    ZVAL_COPY(&self->protocol, protocol);
+
+    skyray_protocol_on_connect_stream(protocol, &self->std);
+    skyray_protocol_on_stream_connected(protocol, &self->std);
+}
+
 SKYRAY_METHOD(stream, __construct)
 {
 
@@ -403,15 +414,38 @@ SKYRAY_METHOD(stream, getSockName)
     if (!name) {
         RETURN_FALSE;
     } else {
-        ZVAL_ARR(return_value, name);
+        RETURN_ARR(name);
     }
 }
 
+SKYRAY_METHOD(stream, setProtocol)
+{
+    zval *protocol;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O", &protocol, skyray_ce_ProtocolInterface) == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    skyray_stream_set_protocol(intern, protocol);
+}
+
+SKYRAY_METHOD(stream, getProtocol)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+    skyray_stream_t * intern = skyray_stream_from_obj(Z_OBJ_P(getThis()));
+
+    ZVAL_COPY(return_value, &intern->protocol);
+}
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_write, 0, 0, 1)
     ZEND_ARG_INFO(0, obj)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_setProtocol, 0, 0, 1)
+    ZEND_ARG_INFO(0, protocol)
+ZEND_END_ARG_INFO()
 
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(stream, __construct, arginfo_empty, ZEND_ACC_PRIVATE | ZEND_ACC_CTOR)
@@ -423,6 +457,8 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(stream, isBlocking, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(stream, getPeerName, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(stream, getSockName, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, setProtocol, arginfo_setProtocol, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(stream, getProtocol, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     PHP_FE_END
 };
 
