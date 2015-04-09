@@ -28,6 +28,8 @@ var_dump($stream->getSockName());
 $stream->close();
 echo "==== done ====\n\n";
 
+posix_kill($process->getPid(), 15);
+$process->join();
 ?>
 --EXPECTF--
 peer name:
