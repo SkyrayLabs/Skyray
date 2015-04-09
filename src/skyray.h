@@ -82,4 +82,13 @@ enum {
   UV_HANDLE_IPV6          = 0x10000 /* Handle is bound to a IPv6 socket. */
 };
 
+enum {
+  SR_OPENGING              = 1 << 0,
+  SR_OPENED                = 1 << 1,
+  SR_CLOSING               = 1 << 2,
+  SR_CLOSED                = 1 << 3,
+  SR_READABLE              = 1 << 4,
+  SR_WRITABLE              = 1 << 5
+};
+
 #endif /* SKYRAY_H_ */

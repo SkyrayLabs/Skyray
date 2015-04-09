@@ -33,9 +33,8 @@ void skyray_stream_object_free(zend_object *object)
 void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *protocol)
 {
     self->blocking = 1;
-    self->impl.blk.fd = fd;
-    self->impl.blk.status = SKYRAY_STREAM_STATUS_OPENING;
-    self->impl.blk.rw_mask = 0;
+    skyray_stream_fd(self) = fd;
+    self->stream.flags = SR_OPENGING;
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
         zval_addref_p(&self->protocol);
@@ -46,8 +45,8 @@ void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *pro
 void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *reactor, zend_object *protocol)
 {
     self->blocking = 0;
-    uv_tcp_init(&reactor->loop, &self->impl.tcp);
-    self->impl.tcp.data = self;
+    uv_tcp_init(&reactor->loop, &self->tcp);
+    self->tcp.data = self;
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
@@ -60,9 +59,9 @@ zend_bool skyray_stream_is_readable(skyray_stream_t *self)
 {
     zend_bool result;
     if (self->blocking) {
-        result = self->impl.blk.status == SKYRAY_STREAM_STATUS_OPENED && (self->impl.blk.rw_mask & SKYRAY_STREAM_READABLE);
+        result = (self->stream.flags & SR_OPENED) && (self->stream.flags & SR_READABLE);
     } else {
-        result = uv_is_active((uv_handle_t *)&self->impl.tcp) && uv_is_readable((uv_stream_t *)&self->impl.tcp);
+        result = uv_is_active((uv_handle_t *)&self->tcp) && uv_is_readable((uv_stream_t *)&self->tcp);
     }
 
     return result;
@@ -72,9 +71,9 @@ zend_bool skyray_stream_is_writable(skyray_stream_t *self)
 {
     zend_bool result;
     if (self->blocking) {
-        result = self->impl.blk.status == SKYRAY_STREAM_STATUS_OPENED && (self->impl.blk.rw_mask & SKYRAY_STREAM_WRITABLE);
+        result = (self->stream.flags & SR_OPENED) && (self->stream.flags & SR_WRITABLE);
     } else {
-        result = uv_is_active((uv_handle_t *)&self->impl.tcp) && uv_is_writable((uv_stream_t *)&self->impl.tcp);
+        result = uv_is_active((uv_handle_t *)&self->tcp) && uv_is_writable((uv_stream_t *)&self->tcp);
     }
 
     return result;
@@ -82,16 +81,16 @@ zend_bool skyray_stream_is_writable(skyray_stream_t *self)
 
 static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buffer)
 {
-    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
+    if (self->stream.flags & SR_CLOSED) {
         skyray_throw_exception("Unable to write data to closed stream.");
         return -1;
     }
-    if (!(self->impl.blk.rw_mask & SKYRAY_STREAM_WRITABLE)) {
+    if (!(self->stream.flags & SR_WRITABLE)) {
         skyray_throw_exception("The stream is not writable.");
         return -1;
     }
 
-    int ret = write(self->impl.blk.fd, buffer->val, buffer->len);
+    int ret = write(skyray_stream_fd(self), buffer->val, buffer->len);
     if (ret < 0) {
         skyray_throw_exception_from_errno(errno);
         return -1;
@@ -111,7 +110,7 @@ static void write_cb(uv_write_t *req, int status)
 
 static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *buffer)
 {
-    uv_tcp_t *tcp = &self->impl.tcp;
+    uv_tcp_t *tcp = &self->tcp;
 
     if ((tcp->flags & UV_CLOSING) || (tcp->flags & UV_CLOSED)) {
         skyray_throw_exception("Unable to write to stream, the stream may already closed\n");
@@ -148,19 +147,19 @@ int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
 
 static zend_string * _skyray_stream_read_blocking(skyray_stream_t * self, zend_bool slient)
 {
-    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
+    if (self->stream.flags & SR_CLOSED) {
         !slient && skyray_throw_exception("Unable to read data from closed stream.");
         return NULL;
     }
 
-    if (!(self->impl.blk.rw_mask & SKYRAY_STREAM_READABLE)) {
+    if (!(self->stream.flags & SR_READABLE)) {
         !slient && skyray_throw_exception("The stream is not readable.");
         return NULL;
     }
 
     zend_string *buffer = zend_string_alloc(8192, 0);
 
-    int ret = read(self->impl.blk.fd, buffer->val, 8192);
+    int ret = read(skyray_stream_fd(self), buffer->val, 8192);
     if (ret < 0) {
         zend_string_free(buffer);
         !slient && skyray_throw_exception_from_errno(errno);
@@ -196,8 +195,8 @@ void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer)
 void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
 {
     if (self->blocking) {
-        self->impl.blk.status = SKYRAY_STREAM_STATUS_OPENED;
-        self->impl.blk.rw_mask = rw_mask;
+        self->stream.flags &= ~SR_OPENGING;
+        self->stream.flags |= (SR_OPENED | rw_mask);
     }
 
     if (!ZVAL_IS_NULL(&self->protocol)) {
@@ -208,8 +207,8 @@ void skyray_stream_on_opened(skyray_stream_t *self, int rw_mask)
 void skyray_stream_on_closed(skyray_stream_t *self)
 {
     if (self->blocking) {
-        self->impl.blk.status = SKYRAY_STREAM_STATUS_CLOSED;
-        self->impl.blk.rw_mask = 0;
+        self->stream.flags &= ~(SR_OPENED | SR_OPENGING);
+        self->stream.flags |= SR_CLOSED;
     }
 
     if (!ZVAL_IS_NULL(&self->protocol)) {
@@ -224,10 +223,10 @@ void skyray_stream_on_closed(skyray_stream_t *self)
 
 zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
 {
-    if (self->impl.blk.status == SKYRAY_STREAM_STATUS_CLOSED) {
+    if (self->stream.flags & SR_CLOSED) {
         return 1;
     }
-    if (close(self->impl.blk.fd) < 0) {
+    if (close(skyray_stream_fd(self)) < 0) {
         skyray_throw_exception_from_errno(errno);
         return 0;
     }
@@ -244,7 +243,7 @@ static void close_cb(uv_handle_t *uv_stream)
 
 zend_bool _skyray_stream_close_nonblocking(skyray_stream_t *self)
 {
-    uv_close((uv_handle_t *)&self->impl.tcp, close_cb);
+    uv_close((uv_handle_t *)&self->tcp, close_cb);
     return 1;
 }
 
@@ -258,11 +257,6 @@ zend_bool skyray_stream_close(skyray_stream_t *self)
     }
 
     return result;
-}
-
-static inline int skyray_stream_fd(skyray_stream_t *self)
-{
-    return self->blocking ? self->impl.blk.fd : self->impl.tcp.io_watcher.fd;
 }
 
 static inline zend_array * sockaddr_to_array(struct sockaddr_in *addr)

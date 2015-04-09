@@ -14,26 +14,12 @@
 
 extern zend_class_entry *skyray_ce_Stream;
 
-typedef enum _skyray_stream_status {
-    SKYRAY_STREAM_STATUS_OPENING = 1,
-    SKYRAY_STREAM_STATUS_OPENED,
-    SKYRAY_STREAM_STATUS_CLOSED,
-}skyray_stream_status_t;
-
-#define SKYRAY_STREAM_READABLE 1
-#define SKYRAY_STREAM_WRITABLE 2
-
 typedef struct _skyray_stream {
     union {
-        struct {
-            int fd;
-            int rw_mask;
-            skyray_stream_status_t status;
-        } blk;
+        uv_stream_t stream;
         uv_tcp_t tcp;
         uv_pipe_t pipe;
-        uv_udp_t udp;
-    } impl;
+    };
     int blocking;
     zval protocol;
     zend_object std;
@@ -42,6 +28,8 @@ typedef struct _skyray_stream {
 static inline skyray_stream_t *skyray_stream_from_obj(zend_object *obj) /* {{{ */ {
     return (skyray_stream_t*)((char*)(obj) - XtOffsetOf(skyray_stream_t, std));
 }
+
+#define skyray_stream_fd(_self) (_self)->stream.io_watcher.fd
 
 void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer);
 void skyray_stream_on_closed(skyray_stream_t *self);

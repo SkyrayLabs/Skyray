@@ -88,16 +88,16 @@ static void on_connection(uv_stream_t *serv, int status)
 
     skyray_stream_init_nonblocking(stream, server->reactor, protocol);
 
-    int result = uv_accept(serv, (uv_stream_t *)&stream->impl.tcp);
+    int result = uv_accept(serv, (uv_stream_t *)&stream->tcp);
     if (result < 0) {
-        uv_close((uv_handle_t *)&stream->impl.tcp, NULL);
+        uv_close((uv_handle_t *)&stream->tcp, NULL);
         zend_object_release(Z_OBJ(zstream));
         return;
     }
 
-    skyray_stream_on_opened(stream, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
+    skyray_stream_on_opened(stream, SR_READABLE | SR_WRITABLE);
 
-    uv_read_start((uv_stream_t *)&stream->impl.tcp, alloc_buffer, read_cb);
+    uv_read_start((uv_stream_t *)&stream->tcp, alloc_buffer, read_cb);
 }
 
 zend_bool skyray_stream_server_listen(skyray_stream_server_t *self, zend_string *host, zend_long port, zend_long backlog)

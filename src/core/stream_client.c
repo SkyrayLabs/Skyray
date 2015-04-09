@@ -110,7 +110,7 @@ void stream_client_do_connect_blocking(
     skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
     skyray_stream_init_blocking(stream_intern, fd, protocol_obj);
 
-    skyray_stream_on_opened(stream_intern, SKYRAY_STREAM_READABLE | SKYRAY_STREAM_WRITABLE);
+    skyray_stream_on_opened(stream_intern, SR_READABLE | SR_WRITABLE);
 
     if (!self->protocol_creator) {
         ZVAL_COPY(return_value, &zstream);
@@ -195,7 +195,7 @@ void stream_client_do_connect_nonblocking(
     req->type = UV_TCP;
     req->data = stream;
 
-    uv_tcp_connect(req, &stream->impl.tcp, (struct sockaddr*)&addr, on_connected);
+    uv_tcp_connect(req, &stream->tcp, (struct sockaddr*)&addr, on_connected);
 
     ZVAL_COPY(return_value, &zstream);
 }
@@ -255,8 +255,8 @@ SKYRAY_METHOD(stream_client, createPipe)
     skyray_stream_init_blocking(intern1, fds[0], NULL);
     skyray_stream_init_blocking(intern2, fds[1], NULL);
 
-    skyray_stream_on_opened(intern1, SKYRAY_STREAM_READABLE);
-    skyray_stream_on_opened(intern2, SKYRAY_STREAM_WRITABLE);
+    skyray_stream_on_opened(intern1, SR_READABLE);
+    skyray_stream_on_opened(intern2, SR_WRITABLE);
 
     add_index_zval(return_value, 0, stream1);
     add_index_zval(return_value, 1, stream2);
