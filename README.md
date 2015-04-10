@@ -1,6 +1,9 @@
 # Skyray - A networking library for PHP written in C
 
-Skyray provides non-blocking I/O and multi-processing facilities for PHP based on libuv. 
+Skyray provides non-blocking I/O and multi-processing facilities for PHP, it is intended 
+be to as flexible as possible to suit for various applications.
+
+[![](https://travis-ci.org/bixuehujin/skyray.png?branch=master)](https://travis-ci.org/bixuehujin/skyray)
 
 ## Features
 
@@ -8,6 +11,7 @@ Skyray provides non-blocking I/O and multi-processing facilities for PHP based o
 * Stream oriented abstraction, everything is stream, simple and clean
 * Build servers with PHP, quick and easy
 * Support both non-blocking and blocking interfaces 
+* Support millisecond timer (both periodic and non-periodic)  
 * Bring all possibilities to PHP world ... 
 
 ## Installation
