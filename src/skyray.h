@@ -27,9 +27,10 @@
 #   define PHP_SKYRAY_API
 #endif
 
-
 #ifdef ZTS
-#include "TSRM.h"
+#ifdef COMPILE_DL_MYSQLI
+ZEND_TSRMLS_CACHE_EXTERN();
+#endif
 #endif
 
 extern zend_class_entry * skyray_ce_SkyrayException;

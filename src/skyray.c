@@ -72,6 +72,8 @@ PHP_MINIT_FUNCTION(skyray_exceptions)
  */
 PHP_MINIT_FUNCTION(skyray)
 {
+    ZEND_TSRMLS_CACHE_UPDATE();
+
     PHP_MINIT(skyray_exceptions)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_interfaces)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_reactor)(INIT_FUNC_ARGS_PASSTHRU);
@@ -134,5 +136,8 @@ zend_module_entry skyray_module_entry = {
 
 
 #ifdef COMPILE_DL_SKYRAY
+#ifdef ZTS
+ZEND_TSRMLS_CACHE_DEFINE();
+#endif
 ZEND_GET_MODULE(skyray)
 #endif
