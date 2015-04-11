@@ -29,7 +29,7 @@ zend_object * skyray_reactor_object_new(zend_class_entry *ce)
 void skyray_reactor_object_free(zend_object *object)
 {
     skyray_reactor_t *intern = skyray_reactor_from_obj(object);
-    uv__loop_close(&intern->loop);
+    uv_loop_close(&intern->loop);
     zend_object_std_dtor(&intern->std);
 }
 

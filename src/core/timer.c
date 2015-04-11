@@ -27,7 +27,7 @@ zend_object * skyray_timer_object_new(zend_class_entry *ce)
 void skyray_timer_object_free(zend_object *object)
 {
     skyray_timer_t *intern = skyray_timer_from_obj(object);
-    uv__timer_close(&intern->timer);
+    uv_close((uv_handle_t *)&intern->timer, NULL);
     zend_object_std_dtor(&intern->std);
 }
 

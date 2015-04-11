@@ -50,7 +50,7 @@ if test "$PHP_SKYRAY" != "no"; then
   
   AC_MSG_CHECKING([for libuv source tree presents])
   if test -r $UV_DIR/src ; then
-    PHP_ADD_LIBRARY_WITH_PATH(uv, $UV_DIR/out/Debug, SKYRAY_SHARED_LIBADD)
+    PHP_ADD_LIBRARY_WITH_PATH(uv, $UV_DIR/.libs/, SKYRAY_SHARED_LIBADD)
     AC_MSG_RESULT([yes])
   else
     AC_MSG_ERROR([the libuv source tree can not be found in "$UV_DIR", please run "git submodule init"])

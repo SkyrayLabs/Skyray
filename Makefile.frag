@@ -1,7 +1,7 @@
-$(srcdir)/deps/libuv/out/Debug/libuv.a:
-	cd $(srcdir)/deps/libuv && ./gyp_uv.py -f make && make -C out CFLAGS=-fPIC
+$(srcdir)/deps/libuv/.libs/libuv.a:
+	cd $(srcdir)/deps/libuv && touch install-sh && ./autogen.sh && ./configure && make CFLAGS=-fPIC
 
-all: $(srcdir)/deps/libuv/out/Debug/libuv.a $(all_targets)
+all: $(srcdir)/deps/libuv/.libs/libuv.a $(all_targets)
 	@echo
 	@echo "Build complete."
 	@echo "Don't forget to run 'make test'."
