@@ -8,17 +8,7 @@ use skyray\core\StreamClient;
 use skyray\processing\Process;
 use skyray\core\ProtocolInterface;
 
-require_once __DIR__ . '/includes/SimpleHttpServer.php';
-
-function start_http_server()
-{
-    $server = new SimpleHttpServer('0.0.0.0', 2333);
-    $server->start();
-}
-
-$process = new Process('start_http_server');
-$process->start();
-usleep(200000);
+$server = require_once __DIR__ . '/includes/ServerProcess.php';
 
 echo "==== test without protocol ====\n";
 $client = new StreamClient(null);
@@ -68,9 +58,7 @@ $protocol = $client->connectTCP('127.0.0.1', 2333);
 var_dump(get_class($protocol));
 echo "==== done ====\n";
 
-posix_kill($process->getPid(), 15);
-$process->join();
-
+$server->stop();
 ?>
 
 --EXPECTF--

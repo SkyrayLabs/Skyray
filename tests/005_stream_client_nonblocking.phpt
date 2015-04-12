@@ -6,21 +6,9 @@ Test for StreamClient::connectTCP() non-blocking mode
 <?php
 use skyray\core\Reactor;
 use skyray\core\StreamClient;
-use skyray\processing\Process;
-use skyray\core\SkyrayException;
 use skyray\core\ProtocolInterface;
 
-require_once __DIR__ . '/includes/SimpleHttpServer.php';
-
-function start_http_server()
-{
-    $server = new SimpleHttpServer('0.0.0.0', 2333);
-    $server->start();
-}
-
-$process = new Process('start_http_server');
-$process->start();
-usleep(200000);
+$server = require_once __DIR__ . '/includes/ServerProcess.php';
 
 set_exception_handler(function ($e) {
     echo '[error]: ' . $e->getMessage();
@@ -93,8 +81,7 @@ $reactor->addTimer(200, function () {
 });
 $reactor->run();
 
-posix_kill($process->getPid(), 15);
-$process->join();
+$server->stop();
 ?>
 --EXPECTF--
 skyray\core\Stream
