@@ -37,6 +37,9 @@ int skyray_stream_write(skyray_stream_t * self, zend_string *buffer);
 zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient);
 zend_bool skyray_stream_close(skyray_stream_t *self);
 
+void skyray_stream_read_start(skyray_stream_t *self);
+void skyray_stream_read_stop(skyray_stream_t *self);
+
 PHP_MINIT_FUNCTION(stream);
 
 

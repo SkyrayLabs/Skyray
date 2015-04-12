@@ -48,29 +48,6 @@ void skyray_stream_server_init(skyray_stream_server_t *self, skyray_reactor_t *r
     self->serv.data = self;
 }
 
-static void alloc_buffer(uv_handle_t *handle, size_t suggested_size, uv_buf_t* buf)
-{
-    static char buffer[65536];
-    buf->base = buffer;
-    buf->len = 65536;
-}
-
-static void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
-{
-    skyray_stream_t *stream = (skyray_stream_t *)client;
-    if (nread < 0) {
-        if (nread != UV_EOF) {
-            printf("error_rd: %s\n", uv_strerror(nread));
-        }
-        skyray_stream_close(stream);
-        return;
-    }
-
-    zend_string *buffer = zend_string_init(buf->base, nread, 0);
-    skyray_stream_on_data(stream, buffer);
-    zend_string_free(buffer);
-}
-
 static void on_connection(uv_stream_t *serv, int status)
 {
     if (status < 0) {
@@ -97,7 +74,7 @@ static void on_connection(uv_stream_t *serv, int status)
 
     skyray_stream_on_opened(stream, SR_READABLE | SR_WRITABLE);
 
-    uv_read_start((uv_stream_t *)&stream->tcp, alloc_buffer, read_cb);
+    skyray_stream_read_start(stream);
 }
 
 zend_bool skyray_stream_server_listen(skyray_stream_server_t *self, zend_string *host, zend_long port, zend_long backlog)

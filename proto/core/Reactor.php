@@ -33,17 +33,6 @@ class Reactor
     }
 
     /**
-     * Add a stream to reactor for both read and write.
-     *
-     * @param $stream
-     * @param null $callback
-     */
-    public function addBoth($stream, $callback = null)
-    {
-
-    }
-
-    /**
      * Remove the specified reader stream from reactor.
      *
      * @param $stream
@@ -59,16 +48,6 @@ class Reactor
      * @param $stream
      */
     public function removeWriter($stream)
-    {
-
-    }
-
-    /**
-     * Remove a stream from reactor for both read and write.
-     *
-     * @param $stream
-     */
-    public function removeBoth($stream)
     {
 
     }

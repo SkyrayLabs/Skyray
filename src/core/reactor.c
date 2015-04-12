@@ -7,6 +7,7 @@
 
 #include "reactor.h"
 #include "timer.h"
+#include "stream.h"
 
 zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;
@@ -55,8 +56,13 @@ SKYRAY_METHOD(reactor, addReader)
 {
     zval *zstream, *callback = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O|z", &zstream, skyray_ce_Stream, &callback) == FAILURE) {
         return;
+    }
+
+    skyray_stream_t *stream = skyray_stream_from_obj(Z_OBJ_P(zstream));
+    if (skyray_stream_to_nonblocking(stream, skyray_reactor_from_obj(Z_OBJ_P(getThis())))) {
+        skyray_stream_read_start(stream);
     }
 }
 
@@ -64,43 +70,30 @@ SKYRAY_METHOD(reactor, addWriter)
 {
     zval *zstream, *callback = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O|z", &zstream, skyray_ce_Stream, &callback) == FAILURE) {
         return;
     }
-}
 
-SKYRAY_METHOD(reactor, addBoth)
-{
-    zval *zstream, *callback = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
-        return;
-    }
 }
 
 SKYRAY_METHOD(reactor, removeReader)
 {
     zval *zstream, *callback = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O|z", &zstream, skyray_ce_Stream, &callback) == FAILURE) {
         return;
     }
+
+    skyray_stream_t *stream = skyray_stream_from_obj(Z_OBJ_P(zstream));
+    skyray_stream_read_stop(stream);
 }
 
 SKYRAY_METHOD(reactor, removeWriter)
 {
     zval *zstream, *callback = NULL;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
-        return;
-    }
-}
-
-SKYRAY_METHOD(reactor, removeBoth)
-{
-    zval *zstream, *callback = NULL;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "o|z", &zstream, &callback) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O|z", &zstream, skyray_ce_Stream, &callback) == FAILURE) {
         return;
     }
 }
@@ -195,22 +188,12 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_addReader, 0, 0, 1)
     ZEND_ARG_INFO(0, callback)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_addBoth, 0, 0, 1)
-    ZEND_ARG_INFO(0, stream)
-    ZEND_ARG_INFO(0, callback)
-ZEND_END_ARG_INFO()
-
 ZEND_BEGIN_ARG_INFO_EX(arginfo_removeWriter, 0, 0, 1)
     ZEND_ARG_INFO(0, stream)
     ZEND_ARG_INFO(0, callback)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_removeReader, 0, 0, 1)
-    ZEND_ARG_INFO(0, stream)
-    ZEND_ARG_INFO(0, callback)
-ZEND_END_ARG_INFO()
-
-ZEND_BEGIN_ARG_INFO_EX(arginfo_removeBoth, 0, 0, 1)
     ZEND_ARG_INFO(0, stream)
     ZEND_ARG_INFO(0, callback)
 ZEND_END_ARG_INFO()
@@ -228,10 +211,8 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(reactor, __construct, arginfo___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, addReader, arginfo_addReader, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, addWriter, arginfo_addWriter, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, addBoth, arginfo_addBoth, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, removeReader, arginfo_removeReader, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, removeWriter, arginfo_removeWriter, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, removeBoth, arginfo_removeBoth, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, addTimer, arginfo_addTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, addPeriodicTimer, arginfo_addTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)

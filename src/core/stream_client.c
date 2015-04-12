@@ -131,46 +131,12 @@ void stream_client_do_connect_blocking(
     RETURN_OBJ(protocol_obj);
 }
 
-static void alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t* buf)
-{
-    buf->base = emalloc(suggested_size);
-    buf->len = suggested_size;
-}
-
-static void close_cb(uv_handle_t* uv_stream)
-{
-    skyray_stream_t *stream = (skyray_stream_t *)uv_stream;
-    skyray_protocol_on_stream_closed(&stream->protocol);
-}
-
-static void read_cb(uv_stream_t* uv_stream, ssize_t nread, const uv_buf_t* buf)
-{
-    skyray_stream_t *stream = uv_stream->data;
-
-    if (nread < 0) {
-        if (nread != UV_EOF) {
-            // TODO error handing
-            printf("error: %ld - %s\n", nread, uv_strerror(nread));
-        }
-
-        uv_close((uv_handle_t *)uv_stream, close_cb);
-        goto clean;
-    }
-
-    zend_string *data = zend_string_init(buf->base, nread, 0);
-    skyray_protocol_on_data_received(&stream->protocol, data);
-    zend_string_free(data);
-
-clean:
-    efree(buf->base);
-}
-
 static void on_connected(uv_connect_t *req, int status)
 {
     skyray_stream_t *stream = req->data;
     skyray_protocol_on_stream_connected(&stream->protocol);
     req->handle->data = req->data;
-    uv_read_start(req->handle, alloc_cb, read_cb);
+    skyray_stream_read_start(stream);
     efree(req);
 }
 
