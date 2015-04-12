@@ -48,8 +48,21 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, int type, skyray_reac
 {
     self->blocking = 0;
     self->type = type;
-    uv_tcp_init(&reactor->loop, &self->tcp);
-    self->tcp.data = self;
+
+    switch (type) {
+    case SR_TCP:
+        uv_tcp_init(&reactor->loop, &self->tcp);
+        break;
+    case SR_PIPE:
+    case SR_UNIX:
+        uv_pipe_init(&reactor->loop, &self->pipe, 1);
+        break;
+    default:
+        assert(0);
+        break;
+    }
+
+    self->stream.data = self;
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
@@ -64,7 +77,7 @@ zend_bool skyray_stream_is_readable(skyray_stream_t *self)
     if (self->blocking) {
         result = (self->stream.flags & SR_OPENED) && (self->stream.flags & SR_READABLE);
     } else {
-        result = uv_is_active((uv_handle_t *)&self->tcp) && uv_is_readable((uv_stream_t *)&self->tcp);
+        result = uv_is_active((uv_handle_t *)&self->stream) && uv_is_readable((uv_stream_t *)&self->stream);
     }
 
     return result;
@@ -76,7 +89,7 @@ zend_bool skyray_stream_is_writable(skyray_stream_t *self)
     if (self->blocking) {
         result = (self->stream.flags & SR_OPENED) && (self->stream.flags & SR_WRITABLE);
     } else {
-        result = uv_is_active((uv_handle_t *)&self->tcp) && uv_is_writable((uv_stream_t *)&self->tcp);
+        result = uv_is_active((uv_handle_t *)&self->stream) && uv_is_writable((uv_stream_t *)&self->stream);
     }
 
     return result;
@@ -113,9 +126,9 @@ static void write_cb(uv_write_t *req, int status)
 
 static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *buffer)
 {
-    uv_tcp_t *tcp = &self->tcp;
+    uv_stream_t *stream = &self->stream;
 
-    if ((tcp->flags & UV_CLOSING) || (tcp->flags & UV_CLOSED)) {
+    if ((stream->flags & UV_CLOSING) || (stream->flags & UV_CLOSED)) {
         skyray_throw_exception("Unable to write to stream, the stream may already closed\n");
         return 0;
     }
@@ -127,7 +140,7 @@ static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *
     bufs[0].base = buffer->val;
     bufs[0].len  = buffer->len;
 
-    int result = uv_write(req, (uv_stream_t *)tcp, bufs, 1, write_cb);
+    int result = uv_write(req, stream, bufs, 1, write_cb);
 
     if (result < 0) {
         skyray_throw_exception_from_errno(errno);
@@ -246,7 +259,7 @@ static void close_cb(uv_handle_t *uv_stream)
 
 zend_bool _skyray_stream_close_nonblocking(skyray_stream_t *self)
 {
-    uv_close((uv_handle_t *)&self->tcp, close_cb);
+    uv_close((uv_handle_t *)&self->stream, close_cb);
     return 1;
 }
 

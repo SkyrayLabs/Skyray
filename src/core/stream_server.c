@@ -65,9 +65,9 @@ static void on_connection(uv_stream_t *serv, int status)
 
     skyray_stream_init_nonblocking(stream, SR_TCP, server->reactor, protocol);
 
-    int result = uv_accept(serv, (uv_stream_t *)&stream->tcp);
+    int result = uv_accept(serv, &stream->stream);
     if (result < 0) {
-        uv_close((uv_handle_t *)&stream->tcp, NULL);
+        uv_close((uv_handle_t *)&stream->stream, NULL);
         zend_object_release(Z_OBJ(zstream));
         return;
     }
