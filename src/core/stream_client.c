@@ -108,7 +108,7 @@ void stream_client_do_connect_blocking(
     zend_object *stream = Z_OBJ_P(&zstream);
 
     skyray_stream_t * stream_intern = skyray_stream_from_obj(stream);
-    skyray_stream_init_blocking(stream_intern, fd, protocol_obj);
+    skyray_stream_init_blocking(stream_intern, SR_TCP, fd, protocol_obj);
 
     skyray_stream_on_opened(stream_intern, SR_READABLE | SR_WRITABLE);
 
@@ -151,7 +151,7 @@ void stream_client_do_connect_nonblocking(
 
     skyray_stream_t * stream = skyray_stream_from_obj(Z_OBJ(zstream));
 
-    skyray_stream_init_nonblocking(stream, reactor, protocol_obj);
+    skyray_stream_init_nonblocking(stream, SR_TCP, reactor, protocol_obj);
 
     struct sockaddr_in addr;
 
@@ -198,40 +198,48 @@ SKYRAY_METHOD(stream_client, connectTCP)
 SKYRAY_METHOD(stream_client, createPipe)
 {
     zend_bool duplex = 0;
+    zval stream1, stream2;
+    int fds[2];
+    int sockret;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "|b", &duplex) == FAILURE) {
         return;
     }
 
-    int fds[2];
-    if (pipe(fds) == -1) {
+    if (duplex) {
+        sockret = socketpair(AF_UNIX, SOCK_STREAM, 0, fds);
+    } else {
+        sockret = pipe(fds);
+    }
+
+    if (sockret == -1) {
         RETURN_FALSE;
     }
 
     array_init(return_value);
-    zval *stream1 = emalloc(sizeof (zval));
-    zval *stream2 = emalloc(sizeof (zval));
 
-    object_init_ex(stream1, skyray_ce_Stream);
-    object_init_ex(stream2, skyray_ce_Stream);
+    object_init_ex(&stream1, skyray_ce_Stream);
+    object_init_ex(&stream2, skyray_ce_Stream);
 
-    skyray_stream_t * intern1 = skyray_stream_from_obj(Z_OBJ_P(stream1));
-    skyray_stream_t * intern2 = skyray_stream_from_obj(Z_OBJ_P(stream2));
+    skyray_stream_t * intern1 = skyray_stream_from_obj(Z_OBJ_P(&stream1));
+    skyray_stream_t * intern2 = skyray_stream_from_obj(Z_OBJ_P(&stream2));
 
-    skyray_stream_init_blocking(intern1, fds[0], NULL);
-    skyray_stream_init_blocking(intern2, fds[1], NULL);
+    skyray_stream_init_blocking(intern1, SR_PIPE, fds[0], NULL);
+    skyray_stream_init_blocking(intern2, SR_PIPE, fds[1], NULL);
 
-    skyray_stream_on_opened(intern1, SR_READABLE);
-    skyray_stream_on_opened(intern2, SR_WRITABLE);
+    if (duplex) {
+        skyray_stream_on_opened(intern1, SR_READABLE | SR_WRITABLE);
+        skyray_stream_on_opened(intern2, SR_READABLE | SR_WRITABLE);
+    } else {
+        skyray_stream_on_opened(intern1, SR_READABLE);
+        skyray_stream_on_opened(intern2, SR_WRITABLE);
+    }
 
-    add_index_zval(return_value, 0, stream1);
-    add_index_zval(return_value, 1, stream2);
+    add_index_zval(return_value, 0, &stream1);
+    add_index_zval(return_value, 1, &stream2);
 
-    zval_add_ref(stream1);
-    zval_add_ref(stream2);
-
-    efree(stream1);
-    efree(stream2);
+    zval_add_ref(&stream1);
+    zval_add_ref(&stream2);
 }
 
 

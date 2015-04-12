@@ -84,12 +84,20 @@ enum {
 };
 
 enum {
-  SR_OPENGING              = 1 << 0,
-  SR_OPENED                = 1 << 1,
-  SR_CLOSING               = 1 << 2,
-  SR_CLOSED                = 1 << 3,
-  SR_READABLE              = 1 << 4,
-  SR_WRITABLE              = 1 << 5
+    SR_OPENGING              = 1 << 0,
+    SR_OPENED                = 1 << 1,
+    SR_CLOSING               = 1 << 2,
+    SR_CLOSED                = 1 << 3,
+    SR_READABLE              = 1 << 4,
+    SR_WRITABLE              = 1 << 5
+};
+
+enum {
+    SR_PIPE                  = 1,
+    SR_TCP                   = 2,
+    SR_UNIX                  = 3,
+    SR_UDP                   = 4,
+    SR_TTY                   = 5
 };
 
 #endif /* SKYRAY_H_ */

@@ -21,6 +21,7 @@ typedef struct _skyray_stream {
         uv_pipe_t pipe;
     };
     int blocking;
+    int type;
     zval protocol;
     zend_object std;
 }skyray_stream_t;

@@ -63,7 +63,7 @@ static void on_connection(uv_stream_t *serv, int status)
     object_init_ex(&zstream, skyray_ce_Stream);
     skyray_stream_t *stream = skyray_stream_from_obj(Z_OBJ_P(&zstream));
 
-    skyray_stream_init_nonblocking(stream, server->reactor, protocol);
+    skyray_stream_init_nonblocking(stream, SR_TCP, server->reactor, protocol);
 
     int result = uv_accept(serv, (uv_stream_t *)&stream->tcp);
     if (result < 0) {

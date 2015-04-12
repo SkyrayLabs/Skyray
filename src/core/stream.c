@@ -30,11 +30,13 @@ void skyray_stream_object_free(zend_object *object)
     zend_object_std_dtor(&intern->std);
 }
 
-void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *protocol)
+void skyray_stream_init_blocking(skyray_stream_t *self, int type, int fd, zend_object *protocol)
 {
     self->blocking = 1;
+    self->type = type;
     skyray_stream_fd(self) = fd;
     self->stream.flags = SR_OPENGING;
+
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
         zval_addref_p(&self->protocol);
@@ -42,9 +44,10 @@ void skyray_stream_init_blocking(skyray_stream_t *self, int fd, zend_object *pro
     }
 }
 
-void skyray_stream_init_nonblocking(skyray_stream_t *self, skyray_reactor_t *reactor, zend_object *protocol)
+void skyray_stream_init_nonblocking(skyray_stream_t *self, int type, skyray_reactor_t *reactor, zend_object *protocol)
 {
     self->blocking = 0;
+    self->type = type;
     uv_tcp_init(&reactor->loop, &self->tcp);
     self->tcp.data = self;
 
@@ -311,6 +314,8 @@ zend_bool skyray_stream_to_nonblocking(skyray_stream_t *self, skyray_reactor_t *
     if (self->blocking == 0) {
         return 1;
     }
+    self->blocking = 0;
+
     if (!(self->stream.flags & SR_OPENED)) {
         skyray_throw_exception("Only connected streams can be convert to non-blocking");
         return 0;
@@ -322,8 +327,21 @@ zend_bool skyray_stream_to_nonblocking(skyray_stream_t *self, skyray_reactor_t *
     }
 
     int fd = skyray_stream_fd(self);
-    uv_tcp_init(&reactor->loop, &self->tcp);
-    uv_tcp_open(&self->tcp, fd);
+
+    switch (self->type) {
+        case SR_PIPE:
+        case SR_UNIX:
+           uv_pipe_init(&reactor->loop, &self->pipe, 1);
+           uv_pipe_open(&self->pipe, fd);
+        break;
+        case SR_TCP:
+            uv_tcp_init(&reactor->loop, &self->tcp);
+            uv_tcp_open(&self->tcp, fd);
+        break;
+        default:
+            assert(0 && "not supported stream type");
+        break;
+    }
 
     return 1;
 }
