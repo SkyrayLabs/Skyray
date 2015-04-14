@@ -6,9 +6,9 @@ Test for Stream() connvert to non-blocking (pipe)
 <?php
 use skyray\core\Reactor;
 use skyray\core\StreamClient;
-use skyray\core\ProtocolInterface;
+use skyray\core\StreamProtocolInterface;
 
-class MyProtocol implements ProtocolInterface
+class MyProtocol implements StreamProtocolInterface
 {
     public function connectStream($stream)
     {

@@ -2,7 +2,7 @@
 
 use skyray\core\Reactor;
 use skyray\core\StreamServer;
-use skyray\core\ProtocolInterface;
+use skyray\core\StreamProtocolInterface;
 
 
 class SimpleHttpServer
@@ -28,7 +28,7 @@ class SimpleHttpServer
     }
 }
 
-class FakeHttpProtocol implements ProtocolInterface
+class FakeHttpProtocol implements StreamProtocolInterface
 {
     protected $stream;
 

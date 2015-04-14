@@ -53,7 +53,7 @@ PHP_MINIT_FUNCTION(skyray_interfaces)
     };
 
 
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\ProtocolInterface", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\core\\StreamProtocolInterface", class_methods);
     skyray_ce_ProtocolInterface = zend_register_internal_interface(&ce);
 
     return SUCCESS;

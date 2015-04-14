@@ -1,8 +1,8 @@
 <?php
-use skyray\core\ProtocolInterface;
+use skyray\core\StreamProtocolInterface;
 
 
-class SimpleEchoProtocol implements ProtocolInterface
+class SimpleEchoProtocol implements StreamProtocolInterface
 {
     protected $debug;
     protected $clientMode;

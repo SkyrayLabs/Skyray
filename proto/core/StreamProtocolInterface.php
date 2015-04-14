@@ -8,7 +8,7 @@ namespace skyray\core;
  * @package skyray\protocol
  * @since 0.1
  */
-interface ProtocolInterface
+interface StreamProtocolInterface
 {
     /**
      * Called when stream created successfully but the connection is not established yet.

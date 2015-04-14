@@ -6,11 +6,11 @@ Test for Stream() connvert to non-blocking
 <?php
 use skyray\core\Reactor;
 use skyray\core\StreamClient;
-use skyray\core\ProtocolInterface;
+use skyray\core\StreamProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 
-class MyProtocol implements ProtocolInterface
+class MyProtocol implements StreamProtocolInterface
 {
     public function connectStream($stream)
     {

@@ -6,7 +6,7 @@ Test for StreamClient::connectTCP() blocking mode
 <?php
 use skyray\core\StreamClient;
 use skyray\processing\Process;
-use skyray\core\ProtocolInterface;
+use skyray\core\StreamProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 
@@ -22,7 +22,7 @@ echo "==== done ====\n\n";
 echo "==== test with protocol ====\n";
 
 
-class MyProtocol implements ProtocolInterface
+class MyProtocol implements StreamProtocolInterface
 {
     protected $stream;
     protected $data = '';
