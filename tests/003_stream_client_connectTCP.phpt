@@ -9,6 +9,9 @@ use skyray\processing\Process;
 use skyray\core\StreamProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
+register_shutdown_function(function () use ($server) {
+    $server->stop();
+});
 
 echo "==== test without protocol ====\n";
 $client = new StreamClient(null);
@@ -57,8 +60,6 @@ $client = new StreamClient($creator);
 $protocol = $client->connectTCP('127.0.0.1', 2333);
 var_dump(get_class($protocol));
 echo "==== done ====\n";
-
-$server->stop();
 ?>
 
 --EXPECTF--

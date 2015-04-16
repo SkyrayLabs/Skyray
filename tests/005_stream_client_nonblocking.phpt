@@ -9,6 +9,9 @@ use skyray\core\StreamClient;
 use skyray\core\StreamProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
+register_shutdown_function(function () use ($server) {
+    $server->stop();
+});
 
 set_exception_handler(function ($e) {
     echo '[error]: ' . $e->getMessage();
@@ -80,8 +83,6 @@ $reactor->addTimer(200, function () {
     var_dump('timer');
 });
 $reactor->run();
-
-$server->stop();
 ?>
 --EXPECTF--
 skyray\core\Stream

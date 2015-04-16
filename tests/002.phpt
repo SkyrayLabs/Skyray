@@ -7,6 +7,9 @@ Test for Stream::getPeerName() & Stream::getSockName()
 use skyray\core\StreamClient;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
+register_shutdown_function(function () use ($server) {
+    $server->stop();
+});
 
 $client = new StreamClient(null);
 $stream = $client->connectTCP('127.0.0.1', 2333);
@@ -16,8 +19,6 @@ echo 'sock name:' . PHP_EOL;
 var_dump($stream->getSockName());
 $stream->close();
 echo "==== done ====\n\n";
-
-$server->stop();
 ?>
 --EXPECTF--
 peer name:

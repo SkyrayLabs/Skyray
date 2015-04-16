@@ -9,6 +9,9 @@ use skyray\core\StreamClient;
 use skyray\core\StreamProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
+register_shutdown_function(function () use ($server) {
+    $server->stop();
+});
 
 class MyProtocol implements StreamProtocolInterface
 {
@@ -44,8 +47,6 @@ $stream->setProtocol(new MyProtocol());
 echo get_class($stream->getProtocol()) . PHP_EOL;
 $reactor->addReader($stream);
 $reactor->run();
-
-$server->stop();
 ?>
 --EXPECTF--
 string(9) "connected"
