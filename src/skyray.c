@@ -84,6 +84,7 @@ PHP_MINIT_FUNCTION(skyray)
     PHP_MINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
 
     PHP_MINIT(skyray_http_message)(INIT_FUNC_ARGS_PASSTHRU);
+    PHP_MINIT(skyray_http_request)(INIT_FUNC_ARGS_PASSTHRU);
 
     return SUCCESS;
 }

@@ -47,6 +47,13 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 #define skyray_throw_exception(format, ...)  \
     zend_throw_exception_ex(skyray_ce_SkyrayException, 0, format, ## __VA_ARGS__)
 
+#define RETURN_EMPTY_ARR()                          \
+    do {                                            \
+       zval _arr;                                   \
+       array_init(&_arr);                           \
+       RETURN_ZVAL(&_arr, 0, 0);                    \
+    } while (0)
+
 static inline int skyray_throw_exception_from_errno(int errcode)
 {
     if (errcode > 0) {
