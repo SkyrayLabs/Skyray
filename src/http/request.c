@@ -10,11 +10,6 @@
 zend_class_entry *skyray_ce_HttpRequest;
 zend_object_handlers skyray_handler_HttpRequest;
 
-
-static inline skyray_http_request_t *skyray_http_request_from_obj(zend_object *obj) {
-    return (skyray_http_request_t*)(obj);
-}
-
 zend_object * skyray_http_request_object_new(zend_class_entry *ce)
 {
     skyray_http_request_t *intern;
@@ -25,6 +20,7 @@ zend_object * skyray_http_request_object_new(zend_class_entry *ce)
     intern->method = SR_HTTP_GET;
     ZVAL_NULL(&intern->cookie_params);
     ZVAL_NULL(&intern->query_params);
+    ZVAL_NULL(&intern->uri);
 
     intern->message.std.handlers = &skyray_handler_HttpRequest;
     return &intern->message.std;
@@ -41,7 +37,7 @@ void skyray_http_request_object_free(zend_object *object)
 
     zval_dtor(&intern->cookie_params);
     zval_dtor(&intern->query_params);
-    zval_dtor(&intern->parsed_body);
+    zval_dtor(&intern->uri);
 
     skyray_http_message_object_free(object);
 }
@@ -74,6 +70,39 @@ SKYRAY_METHOD(HttpRequest, setMethod)
             break;
         }
     }
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+SKYRAY_METHOD(HttpRequest, getUri)
+{
+    if (zend_parse_parameters_none() ==  FAILURE) {
+        return;
+    }
+
+    skyray_http_request_t *intern = skyray_http_request_from_obj(Z_OBJ_P(getThis()));
+
+    if (ZVAL_IS_NULL(&intern->uri)) {
+        RETURN_STRING("/");
+    } else {
+        RETURN_ZVAL(&intern->uri, 1, 0);
+    }
+}
+
+SKYRAY_METHOD(HttpRequest, setUri)
+{
+    zend_string *uri;
+    int i;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &uri) ==  FAILURE) {
+        return;
+    }
+
+    skyray_http_request_t *intern = skyray_http_request_from_obj(Z_OBJ_P(getThis()));
+
+    zval_dtor(&intern->uri);
+    ZVAL_STR(&intern->uri, uri);
+    zval_add_ref(&intern->uri);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
@@ -150,6 +179,10 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_setQueryParams, 0, 0, 1)
     ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_setUri, 0, 0, 1)
+    ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
 
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(HttpRequest, getMethod, arginfo_empty, ZEND_ACC_PUBLIC)
@@ -158,6 +191,8 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(HttpRequest, setCookieParams, arginfo_setCookieParams, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpRequest, getQueryParams, arginfo_empty, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpRequest, setQueryParams, arginfo_setQueryParams, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpRequest, getUri, arginfo_empty, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpRequest, setUri, arginfo_setUri, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 

@@ -16,7 +16,7 @@ static inline skyray_http_message_t *skyray_http_message_from_obj(zend_object *o
 
 void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce)
 {
-    self->version = -1;
+    self->version_major = self->version_minor = -1;
 
     zend_hash_init(&self->headers, 32, NULL, ZVAL_PTR_DTOR, 0);
     zend_hash_init(&self->iheaders, 32, NULL, ZVAL_PTR_DTOR, 0);
@@ -89,13 +89,15 @@ zval* skyray_http_message_get_header(skyray_http_message_t *self, zend_string *n
 }
 
 
-void skyray_http_message_set_header(skyray_http_message_t *self, zend_string *name, zend_string *value)
+void skyray_http_message_set_header(skyray_http_message_t *self, zend_string *name, zend_string *value, zend_bool dup)
 {
     zval arr;
     zend_string *iname = zend_string_tolower(name);
 
     array_init(&arr);
-    zend_string_addref(value);
+    if (dup) {
+        zend_string_addref(value);
+    }
     add_next_index_str(&arr, value);
 
     zend_hash_update(&self->iheaders, iname, &arr);
@@ -107,21 +109,23 @@ void skyray_http_message_set_header(skyray_http_message_t *self, zend_string *na
     zend_hash_update(&self->headers, name, &arr);
 }
 
-void skyray_http_message_add_header(skyray_http_message_t *self, zend_string *name, zend_string *value)
+void skyray_http_message_add_header(skyray_http_message_t *self, zend_string *name, zend_string *value, zend_bool dup)
 {
     zval *found;
     zend_string *lname = zend_string_tolower(name);
 
     found = zend_hash_find(&self->iheaders, lname);
     if (found) {
-        zend_string_addref(value);
+        if (dup) {
+            zend_string_addref(value);
+        }
         remove_old_header(&self->headers, name);
         add_next_index_str(found, value);
         zval_add_ref(found);
         zend_hash_update(&self->headers, name, found);
 
     } else {
-        skyray_http_message_set_header(self, name, value);
+        skyray_http_message_set_header(self, name, value, dup);
     }
 
     zend_string_release(lname);
@@ -144,9 +148,14 @@ SKYRAY_METHOD(HttpMessage, getProtocolVersion)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
+    int version = intern->version_major * 10 + intern->version_minor;
 
-    if (intern->version >= SR_HTTP_VERSION_10 && intern->version <= SR_HTTP_VERSION_20) {
-        RETURN_STRING(sr_http_versions[intern->version]);
+    if (intern->version_major == 1 && intern->version_minor == 0) {
+        RETURN_STRING("1.0");
+    } else if (intern->version_major == 1 && intern->version_minor == 1) {
+        RETURN_STRING("1.1");
+    } else if (intern->version_major == 1 && intern->version_minor == 0) {
+        RETURN_STRING("2.0");
     }
 }
 
@@ -161,9 +170,22 @@ SKYRAY_METHOD(HttpMessage, setProtocolVersion)
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
 
-    for (i = 0 ; i <= SR_HTTP_VERSION_20 ; i ++) {
+    for (i = 0 ; ; i ++) {
+        if (sr_http_versions[i] == NULL) {
+            break;
+        }
         if (strncmp(sr_http_versions[i], version->val, 3) == 0) {
-            intern->version = i;
+            if (i == 0 || i == 1) {
+                intern->version_major = 1;
+            }else {
+                intern->version_major = 1;
+            }
+
+            if (i == 0 || i == 2) {
+                intern->version_minor = 0;
+            } else {
+                intern->version_minor = 1;
+            }
             break;
         }
     }
@@ -226,7 +248,7 @@ SKYRAY_METHOD(HttpMessage, setHeader)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
-    skyray_http_message_set_header(intern, name, value);
+    skyray_http_message_set_header(intern, name, value, 1);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
@@ -240,7 +262,7 @@ SKYRAY_METHOD(HttpMessage, addHeader)
     }
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
 
-    skyray_http_message_add_header(intern, name, value);
+    skyray_http_message_add_header(intern, name, value, 1);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
