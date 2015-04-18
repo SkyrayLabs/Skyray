@@ -19,7 +19,7 @@ enum {
     SR_HTTP_VERSION_20,
 };
 
-static char *http_versions[3] = {
+static char *sr_http_versions[3] = {
     "1.0",
     "1.1",
     "2.0"

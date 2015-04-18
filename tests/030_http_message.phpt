@@ -1,5 +1,5 @@
 --TEST--
-Test for http message
+Test for skyray\http\Message class
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
@@ -22,6 +22,14 @@ var_dump($message->getHeaders());
 $message->addHeader('name', "value")->addHeader('Name', 'value2');
 var_dump($message->getHeaders());
 var_dump($message->hasHeader('NAME'));
+
+var_dump($message->getBody()); // default to NULL
+var_dump($message->getRawBody()); // default to NULL
+
+$message->setBody([])->setRawBody('');
+
+var_dump($message->getBody());
+var_dump($message->getRawBody());
 ?>
 --EXPECTF--
 string(19) "skyray\http\Message"
@@ -45,3 +53,8 @@ array(1) {
   }
 }
 bool(true)
+NULL
+NULL
+array(0) {
+}
+string(0) ""

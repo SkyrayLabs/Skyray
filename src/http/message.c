@@ -11,7 +11,21 @@ zend_class_entry *skyray_ce_HttpMessage;
 zend_object_handlers skyray_handler_HttpMessage;
 
 static inline skyray_http_message_t *skyray_http_message_from_obj(zend_object *obj) {
-    return (skyray_http_message_t*)((char*)(obj) - XtOffsetOf(skyray_http_message_t, std));
+    return (skyray_http_message_t*)(obj);
+}
+
+void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce)
+{
+    self->version = -1;
+
+    zend_hash_init(&self->headers, 32, NULL, ZVAL_PTR_DTOR, 0);
+    zend_hash_init(&self->iheaders, 32, NULL, ZVAL_PTR_DTOR, 0);
+
+    ZVAL_NULL(&self->body);
+    ZVAL_NULL(&self->raw_body);
+
+    zend_object_std_init(&self->std, ce);
+    object_properties_init(&self->std, ce);
 }
 
 zend_object * skyray_http_message_object_new(zend_class_entry *ce)
@@ -19,13 +33,7 @@ zend_object * skyray_http_message_object_new(zend_class_entry *ce)
     skyray_http_message_t *intern;
     intern = ecalloc(1, sizeof(skyray_http_message_t) + zend_object_properties_size(ce));
 
-    intern->version = -1;
-
-    zend_hash_init(&intern->headers, 32, NULL, ZVAL_PTR_DTOR, 0);
-    zend_hash_init(&intern->iheaders, 32, NULL, ZVAL_PTR_DTOR, 0);
-
-    zend_object_std_init(&intern->std, ce);
-    object_properties_init(&intern->std, ce);
+    skyray_http_message_init(intern, ce);
 
     intern->std.handlers = &skyray_handler_HttpMessage;
     return &intern->std;
@@ -37,6 +45,10 @@ void skyray_http_message_object_free(zend_object *object)
 
     zend_hash_destroy(&intern->headers);
     zend_hash_destroy(&intern->iheaders);
+
+    zval_dtor(&intern->body);
+    zval_dtor(&intern->raw_body);
+
     zend_object_std_dtor(&intern->std);
 }
 
@@ -134,7 +146,7 @@ SKYRAY_METHOD(HttpMessage, getProtocolVersion)
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
 
     if (intern->version >= SR_HTTP_VERSION_10 && intern->version <= SR_HTTP_VERSION_20) {
-        RETURN_STRING(http_versions[intern->version]);
+        RETURN_STRING(sr_http_versions[intern->version]);
     }
 }
 
@@ -150,7 +162,7 @@ SKYRAY_METHOD(HttpMessage, setProtocolVersion)
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
 
     for (i = 0 ; i <= SR_HTTP_VERSION_20 ; i ++) {
-        if (strncmp(http_versions[i], version->val, 3) == 0) {
+        if (strncmp(sr_http_versions[i], version->val, 3) == 0) {
             intern->version = i;
             break;
         }
@@ -258,14 +270,42 @@ SKYRAY_METHOD(HttpMessage, getBody)
 
 SKYRAY_METHOD(HttpMessage, setBody)
 {
-    zend_string *body;
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &body) ==  FAILURE) {
+    zval *body;
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &body) ==  FAILURE) {
         return;
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
     zval_dtor(&intern->body);
-    ZVAL_STR(&intern->body, body);
+    ZVAL_COPY(&intern->body, body);
+
+    RETURN_ZVAL(getThis(), 1, 0);
+}
+
+SKYRAY_METHOD(HttpMessage, getRawBody)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+
+    skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
+    RETURN_ZVAL(&intern->raw_body, 1, 0);
+}
+
+SKYRAY_METHOD(HttpMessage, setRawBody)
+{
+    zend_string *body;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &body) ==  FAILURE) {
+        return;
+    }
+
+    skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
+
+    zval_dtor(&intern->raw_body);
+    ZVAL_STR(&intern->raw_body, body);
+    zval_add_ref(&intern->raw_body);
+
     RETURN_ZVAL(getThis(), 1, 0);
 }
 
@@ -282,8 +322,12 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_name_value, 0, 0, 2)
     ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_with_body, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_set_body, 0, 0, 1)
     ZEND_ARG_INFO(0, body)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_set_rawBody, 0, 0, 1)
+    ZEND_ARG_INFO(0, rawBody)
 ZEND_END_ARG_INFO()
 
 static const zend_function_entry class_methods[] = {
@@ -296,7 +340,9 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(HttpMessage, addHeader, arginfo_name_value, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, removeHeader, arginfo_name, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, getBody, arginfo_empty, ZEND_ACC_PUBLIC)
-    SKYRAY_ME(HttpMessage, setBody, arginfo_with_body, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpMessage, setBody, arginfo_set_body, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpMessage, getRawBody, arginfo_empty, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpMessage, setRawBody, arginfo_set_rawBody, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
