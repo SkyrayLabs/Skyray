@@ -40,3 +40,8 @@ tests/*/*.sh
 .project
 skyray.sublime-project
 skyray.sublime-workspace
+compile
+depcomp
+/core
+ar-lib
+tmp-php.ini
