@@ -15,6 +15,7 @@ var_dump($newVersion);
 
 $message->addHeader('HOST', 'http://php.net')->addHeader("Host", "http://php.net");
 var_dump($message->getHeader('host'));
+var_dump($message->getHeader('Host', true));
 
 $message->removeHeader('host');
 var_dump($message->getHeaders());
@@ -41,6 +42,7 @@ array(2) {
   [1]=>
   string(14) "http://php.net"
 }
+string(14) "http://php.net"
 array(0) {
 }
 array(1) {

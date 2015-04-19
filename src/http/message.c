@@ -16,7 +16,7 @@ static inline skyray_http_message_t *skyray_http_message_from_obj(zend_object *o
 
 void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce)
 {
-    self->version_major = self->version_minor = -1;
+    self->version_major = self->version_minor = 0;
 
     zend_hash_init(&self->headers, 32, NULL, ZVAL_PTR_DTOR, 0);
     zend_hash_init(&self->iheaders, 32, NULL, ZVAL_PTR_DTOR, 0);
@@ -77,13 +77,17 @@ zend_bool skyray_http_message_has_header(skyray_http_message_t *self, zend_strin
     return exists;
 }
 
-zval* skyray_http_message_get_header(skyray_http_message_t *self, zend_string *name)
+zval* skyray_http_message_get_header(skyray_http_message_t *self, zend_string *name, zend_bool first)
 {
     zval *found;
     zend_string *lname = zend_string_tolower(name);
 
     found = zend_hash_find(&self->iheaders, lname);
     zend_string_release(lname);
+
+    if (found && first) {
+        return zend_hash_index_find(Z_ARR_P(found), 0);
+    }
 
     return found;
 }
@@ -225,18 +229,21 @@ SKYRAY_METHOD(HttpMessage, hasHeader)
 SKYRAY_METHOD(HttpMessage, getHeader)
 {
     zend_string *name;
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S", &name) ==  FAILURE) {
+    zend_bool first = 0;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "S|b", &name, &first) ==  FAILURE) {
         return;
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
-    zval *header = skyray_http_message_get_header(intern, name);
-    if (!header) {
-        zval empty_arr;
-        array_init(&empty_arr);
-        RETURN_ARR(Z_ARR(empty_arr));
+    zval *header = skyray_http_message_get_header(intern, name, first);
+    if (header) {
+        RETURN_ZVAL(header, 1, 0);
     }
-    RETURN_ZVAL(header, 1, 0);
+
+    if (!first) {
+        RETURN_EMPTY_ARR();
+    }
 }
 
 SKYRAY_METHOD(HttpMessage, setHeader)
@@ -339,6 +346,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_name, 0, 0, 1)
     ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_getHeader, 0, 0, 1)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_INFO(0, first)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo_name_value, 0, 0, 2)
     ZEND_ARG_INFO(0, name)
     ZEND_ARG_INFO(0, value)
@@ -357,7 +369,7 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(HttpMessage, setProtocolVersion, arginfo_setProtocolVersion, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, getHeaders, arginfo_empty, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, hasHeader, arginfo_name, ZEND_ACC_PUBLIC)
-    SKYRAY_ME(HttpMessage, getHeader, arginfo_name, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(HttpMessage, getHeader, arginfo_getHeader, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, setHeader, arginfo_name_value, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, addHeader, arginfo_name_value, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpMessage, removeHeader, arginfo_name, ZEND_ACC_PUBLIC)
