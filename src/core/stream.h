@@ -35,6 +35,7 @@ static inline skyray_stream_t *skyray_stream_from_obj(zend_object *obj) /* {{{ *
 void skyray_stream_on_data(skyray_stream_t *self, zend_string *buffer);
 void skyray_stream_on_closed(skyray_stream_t *self);
 int skyray_stream_write(skyray_stream_t * self, zend_string *buffer);
+int skyray_stream_writel(skyray_stream_t *self, const char *at, size_t len);
 zend_string * skyray_stream_read(skyray_stream_t * self, zend_bool slient);
 zend_bool skyray_stream_close(skyray_stream_t *self);
 

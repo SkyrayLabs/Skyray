@@ -66,7 +66,7 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, int type, skyray_reac
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
-        zval_addref_p(&self->protocol);
+        //zval_addref_p(&self->protocol);
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
@@ -95,7 +95,7 @@ zend_bool skyray_stream_is_writable(skyray_stream_t *self)
     return result;
 }
 
-static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buffer)
+static int _skyray_stream_write_blocking(skyray_stream_t *self, const char *at, size_t len)
 {
     if (self->stream.flags & SR_CLOSED) {
         skyray_throw_exception("Unable to write data to closed stream.");
@@ -106,7 +106,7 @@ static int _skyray_stream_write_blocking(skyray_stream_t *self, zend_string *buf
         return -1;
     }
 
-    int ret = write(skyray_stream_fd(self), buffer->val, buffer->len);
+    int ret = write(skyray_stream_fd(self), at, len);
     if (ret < 0) {
         skyray_throw_exception_from_errno(errno);
         return -1;
@@ -124,7 +124,7 @@ static void write_cb(uv_write_t *req, int status)
     efree(req);
 }
 
-static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *buffer)
+static int _skyray_stream_write_nonblocking(skyray_stream_t *self, const char *at, size_t len)
 {
     uv_stream_t *stream = &self->stream;
 
@@ -137,8 +137,8 @@ static int _skyray_stream_write_nonblocking(skyray_stream_t *self, zend_string *
     req->type = UV_WRITE;
 
     uv_buf_t bufs[1];
-    bufs[0].base = buffer->val;
-    bufs[0].len  = buffer->len;
+    bufs[0].base = at;
+    bufs[0].len  = len;
 
     int result = uv_write(req, stream, bufs, 1, write_cb);
 
@@ -153,9 +153,21 @@ int skyray_stream_write(skyray_stream_t *self, zend_string *buffer)
 {
     int result = -1;
     if (self->blocking) {
-        result = _skyray_stream_write_blocking(self, buffer);
+        result = _skyray_stream_write_blocking(self, buffer->val, buffer->len);
     } else {
-        result = _skyray_stream_write_nonblocking(self, buffer);
+        result = _skyray_stream_write_nonblocking(self, buffer->val, buffer->len);
+    }
+
+    return result;
+}
+
+int skyray_stream_writel(skyray_stream_t *self, const char *at, size_t len)
+{
+    int result = -1;
+    if (self->blocking) {
+        result = _skyray_stream_write_blocking(self, at, len);
+    } else {
+        result = _skyray_stream_write_nonblocking(self, at, len);
     }
 
     return result;
