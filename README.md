@@ -101,7 +101,7 @@ $stream->close();
 
 ## Documentation
 
-Documentation is not yet available, please refer [prototypes](https://github.com/bixuehujin/skyray/tree/master/proto) of all classes.
+Documentation is not yet available, please refer [here](https://github.com/bixuehujin/skyray/tree/master/proto) for prototype of all classes.
 
 ## Participating
 
