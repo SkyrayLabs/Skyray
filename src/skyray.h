@@ -35,7 +35,9 @@ ZEND_TSRMLS_CACHE_EXTERN();
 #endif
 #endif
 
-extern zend_class_entry * skyray_ce_SkyrayException;
+extern zend_class_entry * skyray_ce_BaseException;
+extern zend_class_entry * skyray_ce_InvalidParamException;
+extern zend_class_entry * skyray_ce_InvalidConfigException;
 extern zend_class_entry * skyray_ce_ProtocolInterface;
 
 #define SKYRAY_MN(name) zim_skyray_##name
@@ -47,7 +49,7 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 #define SKYRAY_CAST(variable, type)  (type)(variable)
 
 #define skyray_throw_exception(format, ...)  \
-    zend_throw_exception_ex(skyray_ce_SkyrayException, 0, format, ## __VA_ARGS__)
+    zend_throw_exception_ex(skyray_ce_BaseException, 0, format, ## __VA_ARGS__)
 
 #define RETURN_EMPTY_ARR()                          \
     do {                                            \
@@ -59,9 +61,9 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 static inline int skyray_throw_exception_from_errno(int errcode)
 {
     if (errcode > 0) {
-        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%d] %s", errcode, strerror(errcode));
+        zend_throw_exception_ex(skyray_ce_BaseException, 0, "[%d] %s", errcode, strerror(errcode));
     } else {
-        zend_throw_exception_ex(skyray_ce_SkyrayException, 0, "[%s] %s", uv_err_name(errcode), uv_strerror(errcode));
+        zend_throw_exception_ex(skyray_ce_BaseException, 0, "[%s] %s", uv_err_name(errcode), uv_strerror(errcode));
     }
 
     return 1;
