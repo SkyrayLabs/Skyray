@@ -7,6 +7,9 @@
 zend_class_entry * skyray_ce_BaseException;
 zend_class_entry * skyray_ce_InvalidParamException;
 zend_class_entry * skyray_ce_InvalidConfigException;
+zend_class_entry * skyray_ce_InvalidCallException;
+zend_class_entry * skyray_ce_InvalidPropertyException;
+zend_class_entry * skyray_ce_UnknownPropertyException;
 zend_class_entry * skyray_ce_ProtocolInterface;
 
 
@@ -73,6 +76,15 @@ PHP_MINIT_FUNCTION(skyray_exceptions)
     INIT_CLASS_ENTRY(ce, "skyray\\InvalidConfigException", NULL);
     skyray_ce_InvalidConfigException = zend_register_internal_class_ex(&ce, skyray_ce_BaseException);
 
+    INIT_CLASS_ENTRY(ce, "skyray\\InvalidCallException", NULL);
+    skyray_ce_InvalidCallException = zend_register_internal_class_ex(&ce, skyray_ce_BaseException);
+
+    INIT_CLASS_ENTRY(ce, "skyray\\InvalidPropertyException", NULL);
+    skyray_ce_InvalidPropertyException = zend_register_internal_class_ex(&ce, skyray_ce_BaseException);
+
+    INIT_CLASS_ENTRY(ce, "skyray\\UnknownPropertyException", NULL);
+    skyray_ce_UnknownPropertyException = zend_register_internal_class_ex(&ce, skyray_ce_BaseException);
+
     return SUCCESS;
 }
 
@@ -82,6 +94,7 @@ PHP_MINIT_FUNCTION(skyray)
 {
     ZEND_TSRMLS_CACHE_UPDATE();
 
+    PHP_MINIT(skyray_object)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_exceptions)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_interfaces)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_reactor)(INIT_FUNC_ARGS_PASSTHRU);

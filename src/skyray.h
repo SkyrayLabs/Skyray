@@ -38,6 +38,9 @@ ZEND_TSRMLS_CACHE_EXTERN();
 extern zend_class_entry * skyray_ce_BaseException;
 extern zend_class_entry * skyray_ce_InvalidParamException;
 extern zend_class_entry * skyray_ce_InvalidConfigException;
+extern zend_class_entry * skyray_ce_InvalidCallException;
+extern zend_class_entry * skyray_ce_InvalidPropertyException;
+extern zend_class_entry * skyray_ce_UnknownPropertyException;
 extern zend_class_entry * skyray_ce_ProtocolInterface;
 
 #define SKYRAY_MN(name) zim_skyray_##name
@@ -76,6 +79,23 @@ void skyray_handle_uncaught_exception(zend_object *old_exception);
 ZEND_BEGIN_ARG_INFO_EX(arginfo_empty, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_magic_get, 0, 0, 1)
+    ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_magic_set, 0, 0, 2)
+    ZEND_ARG_INFO(0, name)
+    ZEND_ARG_INFO(0, value)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_magic_isset, 0, 0, 1)
+    ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_magic_unset, 0, 0, 1)
+    ZEND_ARG_INFO(0, name)
+ZEND_END_ARG_INFO()
+
 /* constants copied from libuv source files */
 enum {
   UV_CLOSING              = 0x01,   /* uv_close() called but not finished. */
@@ -110,5 +130,11 @@ enum {
     SR_UDP                   = 4,
     SR_TTY                   = 5
 };
+
+extern zend_class_entry *skyray_ce_Object;
+
+typedef zend_object skyray_object_t;
+
+void skyray_object_configure(zval *self, zend_array *properties);
 
 #endif /* SKYRAY_H_ */

@@ -64,6 +64,7 @@ if test "$PHP_SKYRAY" != "no"; then
   
   sources="
     src/skyray.c                    \
+    src/object.c                    \
     src/core/reactor.c              \
     src/core/timer.c                \
     src/core/protocol.c             \
