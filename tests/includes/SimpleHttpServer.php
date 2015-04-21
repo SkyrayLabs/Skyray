@@ -7,13 +7,15 @@ use skyray\core\StreamProtocolInterface;
 
 class SimpleHttpServer
 {
+    /**
+     * @var StreamServer
+     */
     protected $server;
-    protected $reactor;
 
     public function __construct($host, $port)
     {
         $this->reactor = new Reactor();
-        $this->server = new StreamServer([$this, 'createProtocol'], $this->reactor);
+        $this->server = new StreamServer([$this, 'createProtocol']);
         $this->server->listen($host, $port);
     }
 
@@ -24,7 +26,7 @@ class SimpleHttpServer
 
     public function start()
     {
-        $this->reactor->run();
+        $this->server->reactor->run();
     }
 }
 

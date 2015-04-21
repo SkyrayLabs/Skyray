@@ -2,22 +2,28 @@
 
 namespace skyray\core;
 
+use skyray\Object;
+
 /**
  * Class StreamServer
+ *
+ * @property Reactor $reactor The reactor object the server current running on, if the property was absent,
+ * a default reactor will be automatically created.
  *
  * @package skyray\core
  * @since 0.1
  */
-class StreamServer
+class StreamServer extends Object
 {
     /**
      * Constructor
      *
-     * @param callable $protocolCreator Factory function to create protocol for streams, the returned object of this callable
+     * @param callable $factory Factory function to create protocol for streams, the returned object of this callable
      * should be instance of \skyray\core\ProtocolInterface.
-     * @param null $reactor The Reactor object, if null passed, a new reactor object will be automatically created by the server.
+     * @param array $config The configuration to initialize the object.
+     * @throws \skyray\InvalidParamException if $factory is not a valid callable.
      */
-    public function __construct($protocolCreator, $reactor = null)
+    public function __construct($factory, $config = [])
     {
 
     }
@@ -28,6 +34,16 @@ class StreamServer
      * @return \skyray\core\Reactor
      */
     public function getReactor()
+    {
+
+    }
+
+    /**
+     * Sets the reactor object used by the server
+     *
+     * @param \skyray\core\Reactor $reactor
+     */
+    public function setReactor($reactor)
     {
 
     }

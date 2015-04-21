@@ -14,7 +14,9 @@ $reactor = new Reactor();
 
 $server = new StreamServer(function () {
     return new SimpleEchoProtocol(true);
-}, $reactor);
+}, [
+    'reactor' => $reactor
+]);
 
 $server->listen('0.0.0.0', 10000);
 
