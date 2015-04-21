@@ -13,7 +13,7 @@ namespace skyray;
  * @package skyray
  * @since 0.1
  */
-class InvalidConfigBaseException extends BaseException
+class InvalidConfigException extends BaseException
 {
 
 } 

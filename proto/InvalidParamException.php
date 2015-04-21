@@ -13,7 +13,7 @@ namespace skyray;
  * @package skyray
  * @since 0.1
  */
-class InvalidParamBaseException extends BaseException
+class InvalidParamException extends BaseException
 {
 
 } 
