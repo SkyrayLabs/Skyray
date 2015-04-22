@@ -14,6 +14,7 @@ zend_class_entry *skyray_ce_HttpProtocol;
 zend_string *intern_str_content_type; // Content-Type
 zend_string *intern_str_application_json; // application/json
 zend_string *intern_str_plain_text; // plain/text
+zend_string *intern_str_connection; // Connection
 
 zend_object_handlers skyray_handler_HttpProtocol;
 
@@ -216,9 +217,8 @@ void skyray_http_protocol_negotiate_content_type(skyray_http_protocol_t *self, s
 zend_bool skyray_http_protocol_send_headers(skyray_http_protocol_t *self, skyray_http_message_t *message)
 {
     zval *zconnection = NULL;
-    zend_string *_name = zend_string_init(ZEND_STRL("Connection"), 0);
-    zconnection = skyray_http_message_get_header(message, _name, 1);
-    zend_string_release(_name);
+
+    zconnection = skyray_http_message_get_header(message, intern_str_connection, 1);
 
     zend_array *ht = &message->headers;
     zend_array *headers;
@@ -396,6 +396,7 @@ PHP_MINIT_FUNCTION(skyray_http_protocol)
     intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 1));
     intern_str_plain_text = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 1));
     intern_str_content_type = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
+    intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));
 
     return SUCCESS;
 }
