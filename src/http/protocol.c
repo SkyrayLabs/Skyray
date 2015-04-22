@@ -15,13 +15,16 @@ zend_string *intern_str_content_type; // Content-Type
 zend_string *intern_str_application_json; // application/json
 zend_string *intern_str_plain_text; // plain/text
 zend_string *intern_str_connection; // Connection
+zend_string *intern_str_onRequest;  // onRequest
 
 zend_object_handlers skyray_handler_HttpProtocol;
 
+void skyray_http_protocol_on_request(skyray_http_protocol_t *self);
 
 static inline skyray_http_protocol_t *skyray_http_protocol_from_obj(zend_object *obj) {
     return (skyray_http_protocol_t*)((char*)(obj) - XtOffsetOf(skyray_http_protocol_t, std));;
 }
+
 
 static int http_on_url(http_parser *parser, const char *at, size_t len)
 {
@@ -128,10 +131,6 @@ static int http_on_message_begin(http_parser *parser)
 static int http_on_message_complete(http_parser *parser)
 {
 
-    zval function_name;
-    zval retval;
-    zval params[1];
-    zval zprotocol;
     skyray_http_protocol_t *protocol = (skyray_http_protocol_t *)parser;
     skyray_http_request_t *req = skyray_http_request_from_obj(protocol->req);
 
@@ -139,18 +138,7 @@ static int http_on_message_complete(http_parser *parser)
         ZVAL_STR(&req->message.raw_body, protocol->body.buf);
     }
 
-    ZVAL_STR(&function_name, zend_string_init(ZEND_STRL("onRequest"), 0));
-    ZVAL_OBJ(&zprotocol, &protocol->std);
-    ZVAL_OBJ(&params[0], protocol->req);
-
-    call_user_function(EG(function_table), &zprotocol, &function_name, &retval, 1, params);
-    zval_dtor(&function_name);
-
-    if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
-    }
-
-    zend_object_release(protocol->req);
+    skyray_http_protocol_on_request(protocol);
 
     return 0;
 }
@@ -288,6 +276,60 @@ void skyray_http_protocol_send_body(skyray_http_protocol_t *self, skyray_http_me
     skyray_stream_writel(stream, ZEND_STRL("\r\n\r\n"));
 }
 
+void skyray_http_protocol_response(skyray_http_protocol_t *self, skyray_http_response_t *response)
+{
+    skyray_stream_t *stream = skyray_stream_from_obj(self->stream);
+
+    char buffer[1024] = {0};
+    int len = sprintf(buffer, "HTTP/%d.%d %d %s\r\n",
+            response->message.version_major ? response->message.version_major : 1,
+            response->message.version_minor ? response->message.version_minor : 1,
+            response->code, "Ok");
+
+    skyray_stream_writel(stream, buffer, len);
+
+    skyray_http_protocol_negotiate_content_type(self, &response->message);
+
+    zend_bool should_close = skyray_http_protocol_send_headers(self, &response->message);
+
+    skyray_http_protocol_send_body(self, &response->message);
+
+    if (should_close) {
+        skyray_stream_close(stream);
+    }
+}
+
+
+void skyray_http_protocol_on_request(skyray_http_protocol_t *self)
+{
+    zval function_name, zprotocol, retval;
+    zval params[1];
+
+    ZVAL_STR(&function_name, intern_str_onRequest);
+    ZVAL_OBJ(&zprotocol, &self->std);
+    ZVAL_OBJ(&params[0], self->req);
+
+    call_user_function(EG(function_table), &zprotocol, &function_name, &retval, 1, params);
+
+    if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception));
+        object_init_ex(&retval, skyray_ce_HttpResponse);
+
+        //TODO 500
+    }else if (Z_TYPE_P(&retval) == IS_NULL) {
+        goto clean;
+    } else if (Z_TYPE_P(&retval) != IS_OBJECT || !instanceof_function(Z_OBJCE_P(&retval), skyray_ce_HttpResponse)) {
+        zval_dtor(&retval);
+        object_init_ex(&retval, skyray_ce_HttpResponse);
+
+        //TODO 500
+    }
+
+    skyray_http_protocol_response(self, (skyray_http_response_t *)Z_OBJ(retval));
+clean:
+    zend_object_release(self->req);
+}
+
 SKYRAY_METHOD(HttpProtocol, connectStream)
 {
     zval *zstream;
@@ -320,37 +362,6 @@ SKYRAY_METHOD(HttpProtocol, dataReceived)
     http_parser_execute(&intern->parser, &http_settings, data->val, data->len);
 }
 
-SKYRAY_METHOD(HttpProtocol, response)
-{
-    zval *zresponse;
-
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "O", &zresponse, skyray_ce_HttpResponse) ==  FAILURE) {
-        return;
-    }
-
-    skyray_http_protocol_t *intern = skyray_http_protocol_from_obj(Z_OBJ_P(getThis()));
-    skyray_http_response_t *response = skyray_http_response_from_obj(Z_OBJ_P(zresponse));
-    skyray_stream_t *stream = skyray_stream_from_obj(intern->stream);
-
-    char buffer[1024] = {0};
-    int len = sprintf(buffer, "HTTP/%d.%d %d %s\r\n",
-            response->message.version_major ? response->message.version_major : 1,
-            response->message.version_minor ? response->message.version_minor : 1,
-            response->code, "Ok");
-
-    skyray_stream_writel(stream, buffer, len);
-
-    skyray_http_protocol_negotiate_content_type(intern, &response->message);
-
-    zend_bool should_close = skyray_http_protocol_send_headers(intern, &response->message);
-
-    skyray_http_protocol_send_body(intern, &response->message);
-
-    if (should_close) {
-        skyray_stream_close(stream);
-    }
-}
-
 SKYRAY_METHOD(HttpProtocol, streamClosed)
 {
     if (zend_parse_parameters_none() ==  FAILURE) {
@@ -366,16 +377,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_dataReceived, 0, 0, 1)
     ZEND_ARG_INFO(0, data)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_response, 0, 0, 1)
-    ZEND_ARG_INFO(0, response)
-ZEND_END_ARG_INFO()
-
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(HttpProtocol, connectStream, arginfo_connectStream, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpProtocol, streamConnected, arginfo_empty, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpProtocol, dataReceived, arginfo_dataReceived, ZEND_ACC_PUBLIC)
     SKYRAY_ME(HttpProtocol, streamClosed, arginfo_empty, ZEND_ACC_PUBLIC)
-    SKYRAY_ME(HttpProtocol, response, arginfo_response, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
@@ -394,9 +400,10 @@ PHP_MINIT_FUNCTION(skyray_http_protocol)
     skyray_handler_HttpProtocol.clone_obj = skyray_http_protocol_object_clone;
 
     intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 1));
-    intern_str_plain_text = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 1));
-    intern_str_content_type = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
+    intern_str_plain_text       = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 1));
+    intern_str_content_type     = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
     intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));
+    intern_str_onRequest        = zend_new_interned_string(zend_string_init(ZEND_STRL("onRequest"), 1));
 
     return SUCCESS;
 }

@@ -9,7 +9,7 @@ use skyray\http\ServerProtocol;
 
 class MyProtocol extends ServerProtocol
 {
-    public function onRequest($request)
+    public function onRequest(Request $request)
     {
         echo "====== request =======" . PHP_EOL;
         echo "{$request->getMethod()} {$request->getUri()} HTTP/{$request->getProtocolVersion()}" . PHP_EOL;
