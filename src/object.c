@@ -7,6 +7,8 @@
 
 #include "skyray.h"
 
+zend_class_entry *skyray_ce_Object;
+
 zend_bool zend_class_method_exists(zend_class_entry *ce, zend_string *method)
 {
     zend_bool exists;

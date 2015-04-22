@@ -393,9 +393,9 @@ PHP_MINIT_FUNCTION(skyray_http_protocol)
     skyray_handler_HttpProtocol.free_obj = skyray_http_protocol_object_free;
     skyray_handler_HttpProtocol.clone_obj = skyray_http_protocol_object_clone;
 
-    intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 0));
-    intern_str_plain_text = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 0));
-    intern_str_content_type = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 0));
+    intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 1));
+    intern_str_plain_text = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 1));
+    intern_str_content_type = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
 
     return SUCCESS;
 }
