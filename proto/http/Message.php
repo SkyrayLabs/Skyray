@@ -7,13 +7,15 @@
 
 namespace skyray\http;
 
+use skyray\Object;
+
 /**
  * Class Message
  *
  * @package skyray\http
  * @since 0.1
  */
-class Message
+class Message extends Object
 {
     public function getProtocolVersion()
     {

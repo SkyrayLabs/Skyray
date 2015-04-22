@@ -8,6 +8,7 @@ use skyray\http\Message;
 
 $message = new Message();
 var_dump(get_class($message));
+var_dump($message instanceof \skyray\Object);
 var_dump($message->getProtocolVersion());
 
 $newVersion = $message->setProtocolVersion("1.1")->getProtocolVersion();
@@ -34,6 +35,7 @@ var_dump($message->getRawBody());
 ?>
 --EXPECTF--
 string(19) "skyray\http\Message"
+bool(true)
 NULL
 string(3) "1.1"
 array(2) {

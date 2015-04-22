@@ -384,7 +384,7 @@ PHP_MINIT_FUNCTION(skyray_http_message)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\http\\Message", class_methods);
-    skyray_ce_HttpMessage = zend_register_internal_class(&ce);
+    skyray_ce_HttpMessage = zend_register_internal_class_ex(&ce, skyray_ce_Object);
     skyray_ce_HttpMessage->create_object = skyray_http_message_object_new;
 
     memcpy(&skyray_handler_HttpMessage, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
