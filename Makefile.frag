@@ -1,5 +1,5 @@
 $(srcdir)/deps/libuv/.libs/libuv.a:
-	cd $(srcdir)/deps/libuv && touch install-sh && ./autogen.sh && ./configure && make CFLAGS=-fPIC && rm .libs/*.dylib .libs/*.la* 
+	cd $(srcdir)/deps/libuv && touch install-sh && ./autogen.sh && ./configure && make CFLAGS=-fPIC && find .libs -name "*.dylib" -o -name "*.la*" | xargs rm 
 
 all: $(srcdir)/deps/libuv/.libs/libuv.a $(all_targets)
 	@echo
