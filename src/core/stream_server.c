@@ -165,6 +165,15 @@ SKYRAY_METHOD(stream_server, listen)
     skyray_stream_server_listen(intern, host, port, backlog);
 }
 
+SKYRAY_METHOD(stream_server, start)
+{
+    if (zend_parse_parameters_none() == FAILURE) {
+        return;
+    }
+
+    skyray_stream_server_t *intern = skyray_stream_server_from_obj(Z_OBJ_P(getThis()));
+    skyray_reactor_run(intern->reactor);
+}
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
     ZEND_ARG_INFO(0, factory)
@@ -187,6 +196,7 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(stream_server, listen, arginfo_listen, ZEND_ACC_PUBLIC)
     SKYRAY_ME(stream_server, getReactor, arginfo_empty, ZEND_ACC_PUBLIC)
     SKYRAY_ME(stream_server, setReactor, arginfo_setReactor, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(stream_server, start, arginfo_empty, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
