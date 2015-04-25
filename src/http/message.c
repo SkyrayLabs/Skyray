@@ -46,8 +46,8 @@ void skyray_http_message_object_free(zend_object *object)
     zend_hash_destroy(&intern->headers);
     zend_hash_destroy(&intern->iheaders);
 
-    zval_dtor(&intern->body);
-    zval_dtor(&intern->raw_body);
+    zval_ptr_dtor(&intern->body);
+    zval_ptr_dtor(&intern->raw_body);
 
     zend_object_std_dtor(&intern->std);
 }
@@ -305,7 +305,7 @@ SKYRAY_METHOD(HttpMessage, setBody)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
-    zval_dtor(&intern->body);
+    zval_ptr_dtor(&intern->body);
     ZVAL_COPY(&intern->body, body);
 
     RETURN_ZVAL(getThis(), 1, 0);

@@ -86,6 +86,9 @@ typedef struct _skyray_http_protocol {
     skyray_buffer_t header_value;
     skyray_buffer_t body;
 
+    unsigned int chunked:1; // indicate the response is chunked
+    unsigned int close:1; // indicate whether or not to close the stream after response is sent.
+
     zend_object *stream;
     zend_object std;
 }skyray_http_protocol_t;
