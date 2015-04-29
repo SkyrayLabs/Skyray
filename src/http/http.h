@@ -96,7 +96,8 @@ typedef struct _skyray_http_protocol {
 
 typedef struct _skyray_http_server {
     skyray_stream_server_t base;
-    zend_bool keep_alive;
+    zval upgrader;
+    zval ws_factory;
 }skyray_http_server_t;
 
 static inline void skyray_buffer_init(skyray_buffer_t *buf, int size)
@@ -160,6 +161,10 @@ static inline skyray_http_protocol_t *skyray_http_protocol_from_obj(zend_object 
     return (skyray_http_protocol_t*)((char*)(obj) - XtOffsetOf(skyray_http_protocol_t, std));;
 }
 
+static inline skyray_http_server_t *skyray_http_server_from_obj(zend_object *obj) {
+    return (skyray_http_server_t*)(obj);
+}
+
 void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce);
 zval* skyray_http_message_get_header(skyray_http_message_t *self, zend_string *name, zend_bool first);
 
@@ -167,6 +172,7 @@ PHP_MINIT_FUNCTION(skyray_http_message);
 PHP_MINIT_FUNCTION(skyray_http_request);
 PHP_MINIT_FUNCTION(skyray_http_response);
 PHP_MINIT_FUNCTION(skyray_http_protocol);
+PHP_MINIT_FUNCTION(skyray_http_server);
 
 
 #endif /* SRC_HTTP_HTTP_H_ */

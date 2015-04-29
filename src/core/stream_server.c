@@ -21,15 +21,19 @@ zend_object * skyray_stream_server_object_new(zend_class_entry *ce)
 {
     skyray_stream_server_t *intern;
     intern = ecalloc(1, sizeof(skyray_stream_server_t) + zend_object_properties_size(ce));
-    intern->reactor = NULL;
 
-    array_init(&intern->streams);
-
-    zend_object_std_init(&intern->std, ce);
-    object_properties_init(&intern->std, ce);
-
+    skyray_stream_server_object_init(intern, ce);
     intern->std.handlers = &skyray_handler_StreamServer;
+
     return &intern->std;
+}
+
+void skyray_stream_server_object_init(skyray_stream_server_t *self, zend_class_entry *ce)
+{
+    self->reactor = NULL;
+    array_init(&self->streams);
+    zend_object_std_init(&self->std, ce);
+    object_properties_init(&self->std, ce);
 }
 
 void skyray_stream_server_object_free(zend_object *object)

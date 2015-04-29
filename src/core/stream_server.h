@@ -15,14 +15,16 @@
 extern zend_class_entry *skyray_ce_StreamServer;
 
 typedef struct _skyray_stream_server {
+    zend_object std;
     // protocol
     zval *protocol_creator;
     skyray_reactor_t *reactor;
     uv_tcp_t serv;
     zval streams; // connected streams
-    zend_object std;
 }skyray_stream_server_t;
 
+void skyray_stream_server_object_init(skyray_stream_server_t *self, zend_class_entry *ce);
+void skyray_stream_server_object_free(zend_object *object);
 PHP_MINIT_FUNCTION(stream_server);
 
 
