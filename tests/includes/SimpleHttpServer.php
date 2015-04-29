@@ -4,7 +4,9 @@ use skyray\core\Reactor;
 use skyray\core\StreamServer;
 use skyray\core\StreamProtocolInterface;
 
-
+/**
+ * A simple http server implementation only relies on StreamServer.
+ */
 class SimpleHttpServer
 {
     /**
