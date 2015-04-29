@@ -1,3 +1,13 @@
 #! /bin/bash
 
-php -d extension=modules/skyray.so $*
+prefix=
+
+for item in $* ;
+do
+    if [ $item == "-v" ] ; then
+        prefix="valgrind"
+        break
+    fi
+done
+
+$prefix php -d extension=modules/skyray.so $*
