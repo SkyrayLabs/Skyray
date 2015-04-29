@@ -1,13 +1,16 @@
 #! /bin/bash
 
-prefix=
-
+prefix=php
+args=
 for item in $* ;
 do
-    if [ $item == "-v" ] ; then
-        prefix="valgrind"
-        break
+    if [ $item == "-V" ] ; then
+        prefix="valgrind php"
+    elif [ $item == "-T" ] ; then
+        prefix="php run-tests.php -p $(which php) --show-diff"
+    else
+        args+=" $item"
     fi
 done
 
-$prefix php -d extension=modules/skyray.so $*
+$prefix -d extension=modules/skyray.so $args
