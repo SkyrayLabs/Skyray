@@ -77,6 +77,7 @@ if test "$PHP_SKYRAY" != "no"; then
     src/http/request.c              \
     src/http/response.c             \
     src/http/protocol.c             \
+    src/http/server.c               \
   "
   
   PHP_NEW_EXTENSION(skyray, $sources, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
