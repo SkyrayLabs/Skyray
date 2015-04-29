@@ -16,7 +16,6 @@ zend_object * skyray_timer_object_new(zend_class_entry *ce)
     skyray_timer_t *intern;
     intern = ecalloc(1, sizeof(skyray_timer_t) + zend_object_properties_size(ce));
 
-
     zend_object_std_init(&intern->std, ce);
     object_properties_init(&intern->std, ce);
 
@@ -27,7 +26,8 @@ zend_object * skyray_timer_object_new(zend_class_entry *ce)
 void skyray_timer_object_free(zend_object *object)
 {
     skyray_timer_t *intern = skyray_timer_from_obj(object);
-    uv_close((uv_handle_t *)&intern->timer, NULL);
+
+    zval_ptr_dtor(&intern->callback);
     zend_object_std_dtor(&intern->std);
 }
 
@@ -47,20 +47,29 @@ zend_bool skyray_timer_is_periodic(skyray_timer_t *self)
     return uv_timer_get_repeat(&self->timer);
 }
 
+static void close_cb(uv_handle_t *uv_timer)
+{
+    skyray_timer_t *timer = (skyray_timer_t *)uv_timer;
+    zend_object_release(&timer->std);
+}
+
 static void timer_callback(uv_timer_t *uv_timer)
 {
     skyray_timer_t *timer = (skyray_timer_t *)uv_timer;
     zval retval, params[1];
 
     ZVAL_OBJ(&params[0], &timer->std);
-    call_user_function(EG(function_table), NULL, &timer->callback, &retval, 1, params);
 
+    call_user_function(NULL, NULL, &timer->callback, &retval, 1, params);
+
+
+    zval_ptr_dtor(&retval);
     if (EG(exception)) {
         skyray_handle_uncaught_exception(EG(exception));
     }
 
     if (uv_timer_get_repeat(&timer->timer) == 0) {
-        zval_delref_p(&params[0]);
+        uv_close((uv_handle_t *)uv_timer, close_cb);
     }
 }
 
@@ -75,7 +84,9 @@ zend_bool skyray_timer_start(skyray_timer_t *self, zend_long interval, zend_long
 
 void skyray_timer_cancel(skyray_timer_t *self)
 {
-    uv_timer_stop(&self->timer);
+    if (uv_is_active((uv_handle_t *)&self->timer)) {
+        uv_close((uv_handle_t *)&self->timer, close_cb);
+    }
 }
 
 SKYRAY_METHOD(timer, __construct)
@@ -115,7 +126,6 @@ SKYRAY_METHOD(timer, cancel)
 
     skyray_timer_t *intern = skyray_timer_from_obj(Z_OBJ_P(getThis()));
     skyray_timer_cancel(intern);
-    zval_delref_p(getThis());
 }
 
 static const zend_function_entry class_methods[] = {
