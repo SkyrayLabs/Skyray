@@ -30,13 +30,24 @@ zend_object * skyray_reactor_object_new(zend_class_entry *ce)
 void skyray_reactor_object_free(zend_object *object)
 {
     skyray_reactor_t *intern = skyray_reactor_from_obj(object);
-    uv_loop_close(&intern->loop);
     zend_object_std_dtor(&intern->std);
 }
 
-int skyray_reactor_run(skyray_reactor_t *self)
+static void walk_cb(uv_handle_t *handle, void *arg)
 {
-    return uv_run(&self->loop, UV_RUN_DEFAULT);
+
+    if (uv_is_active(handle)) {
+        uv_close(handle, NULL);
+    }
+
+}
+
+void skyray_reactor_run(skyray_reactor_t *self)
+{
+    do {
+        uv_run(&self->loop, UV_RUN_DEFAULT);
+        uv_walk(&self->loop, walk_cb, NULL);
+    } while(uv_loop_close(&self->loop) == UV_EBUSY);
 }
 
 void skyray_reactor_stop(skyray_reactor_t *self)

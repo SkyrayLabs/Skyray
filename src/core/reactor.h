@@ -22,6 +22,7 @@ typedef struct _skyray_reactor {
 static inline skyray_reactor_t *skyray_reactor_from_obj(zend_object *obj) {
     return (skyray_reactor_t*)((char*)(obj) - XtOffsetOf(skyray_reactor_t, std));
 }
+void skyray_reactor_run(skyray_reactor_t *self);
 
 PHP_MINIT_FUNCTION(skyray_reactor);
 

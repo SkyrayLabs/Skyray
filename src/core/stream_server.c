@@ -35,11 +35,17 @@ zend_object * skyray_stream_server_object_new(zend_class_entry *ce)
 void skyray_stream_server_object_free(zend_object *object)
 {
     skyray_stream_server_t *intern = skyray_stream_server_from_obj(object);
-    zend_object_std_dtor(&intern->std);
 
     zval_dtor(&intern->streams);
 
+    zval_ptr_dtor(intern->protocol_creator);
     efree(intern->protocol_creator);
+
+    if (intern->reactor) {
+        zend_object_release(&intern->reactor->std);
+    }
+
+    zend_object_std_dtor(&intern->std);
 }
 
 void skyray_stream_server_init(skyray_stream_server_t *self)
@@ -74,6 +80,7 @@ static void on_connection(uv_stream_t *serv, int status)
     int result = uv_accept(serv, &stream->stream);
     if (result < 0) {
         uv_close((uv_handle_t *)&stream->stream, NULL);
+        zend_object_release(protocol);
         zend_object_release(Z_OBJ(zstream));
         return;
     }
@@ -133,6 +140,7 @@ SKYRAY_METHOD(stream_server, setReactor)
     }
 
     skyray_stream_server_t *intern = skyray_stream_server_from_obj(Z_OBJ_P(getThis()));
+    zval_add_ref(reactor);
     intern->reactor = skyray_reactor_from_obj(Z_OBJ_P(reactor));
 }
 
@@ -143,6 +151,8 @@ SKYRAY_METHOD(stream_server, getReactor)
     }
 
     skyray_stream_server_t *intern = skyray_stream_server_from_obj(Z_OBJ_P(getThis()));
+
+    ++GC_REFCOUNT(&intern->reactor->std);
 
     RETURN_OBJ(&intern->reactor->std);
 }

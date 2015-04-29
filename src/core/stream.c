@@ -11,10 +11,13 @@
 zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
 
+void skyray_stream_on_closed(skyray_stream_t *self);
+
 zend_object * skyray_stream_object_new(zend_class_entry *ce)
 {
     skyray_stream_t *intern;
     intern = ecalloc(1, sizeof(skyray_stream_t) + zend_object_properties_size(ce));
+
     ZVAL_NULL(&intern->protocol);
 
     zend_object_std_init(&intern->std, ce);
@@ -27,6 +30,10 @@ zend_object * skyray_stream_object_new(zend_class_entry *ce)
 void skyray_stream_object_free(zend_object *object)
 {
     skyray_stream_t *intern = skyray_stream_from_obj(object);
+
+    //zval_ptr_dtor(&intern->protocol); //the protocol is already released in stream_on_close().
+    ZVAL_NULL(&intern->protocol);
+
     zend_object_std_dtor(&intern->std);
 }
 
@@ -39,7 +46,6 @@ void skyray_stream_init_blocking(skyray_stream_t *self, int type, int fd, zend_o
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
-        zval_addref_p(&self->protocol);
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
@@ -66,7 +72,6 @@ void skyray_stream_init_nonblocking(skyray_stream_t *self, int type, skyray_reac
 
     if (protocol) {
         ZVAL_OBJ(&self->protocol, protocol);
-        //zval_addref_p(&self->protocol);
         skyray_protocol_on_connect_stream(&self->protocol, &self->std);
     }
 }
@@ -128,7 +133,7 @@ static int _skyray_stream_write_nonblocking(skyray_stream_t *self, const char *a
 {
     uv_stream_t *stream = &self->stream;
 
-    if ((stream->flags & UV_CLOSING) || (stream->flags & UV_CLOSED)) {
+    if (stream->flags & (UV_CLOSING | UV_CLOSED | UV_STREAM_SHUTTING)) {
         skyray_throw_exception("Unable to write to stream, the stream may already closed\n");
         return 0;
     }
@@ -237,16 +242,16 @@ void skyray_stream_on_closed(skyray_stream_t *self)
     if (self->blocking) {
         self->stream.flags &= ~(SR_OPENED | SR_OPENGING);
         self->stream.flags |= SR_CLOSED;
+    } else {
+        assert((self->stream.flags & UV_CLOSED));
     }
 
     if (!ZVAL_IS_NULL(&self->protocol)) {
         skyray_protocol_on_stream_closed(&self->protocol);
     }
 
-    if (!ZVAL_IS_NULL(&self->protocol)) {
-        zend_object_release(Z_OBJ(self->protocol));
-    }
     zend_object_release(&self->std);
+    zval_ptr_dtor(&self->protocol);
 }
 
 zend_bool _skyray_stream_close_blocking(skyray_stream_t *self)
@@ -269,9 +274,26 @@ static void close_cb(uv_handle_t *uv_stream)
     skyray_stream_on_closed(stream);
 }
 
+static void shutdown_cb(uv_shutdown_t *req, int status)
+{
+    skyray_stream_t *stream = req->data;
+
+    uv_close((uv_handle_t *)&stream->stream, close_cb);
+    efree(req);
+}
+
 zend_bool _skyray_stream_close_nonblocking(skyray_stream_t *self)
 {
-    uv_close((uv_handle_t *)&self->stream, close_cb);
+    if (!(self->stream.flags & UV_WRITABLE)) {
+        uv_close((uv_handle_t *)&self->stream, close_cb);
+        return 1;
+    }
+
+    uv_shutdown_t *req = emalloc(sizeof(uv_shutdown_t));
+    req->type = UV_SHUTDOWN;
+    req->data = self;
+    uv_shutdown(req, &self->stream, shutdown_cb);
+
     return 1;
 }
 
@@ -389,9 +411,11 @@ static void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
         return;
     }
 
-    zend_string *buffer = zend_string_init(buf->base, nread, 0);
-    skyray_stream_on_data(stream, buffer);
-    zend_string_free(buffer);
+    if (nread > 0) {
+        zend_string *buffer = zend_string_init(buf->base, nread, 0);
+        skyray_stream_on_data(stream, buffer);
+        zend_string_release(buffer);
+    }
 }
 
 void skyray_stream_read_start(skyray_stream_t *self)

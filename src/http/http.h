@@ -48,7 +48,7 @@ static char *sr_http_methods[] = {
 #define SR_HTTP_METHOD_GET_NAME(num) sr_http_methods[num]
 
 typedef struct _skyray_buffer {
-    int size;
+    size_t size;
     zend_string *buf;
 }skyray_buffer_t;
 
@@ -88,6 +88,7 @@ typedef struct _skyray_http_protocol {
 
     unsigned int chunked:1; // indicate the response is chunked
     unsigned int close:1; // indicate whether or not to close the stream after response is sent.
+    unsigned int reserved:30;
 
     zend_object *stream;
     zend_object std;
@@ -153,6 +154,10 @@ static inline skyray_http_request_t *skyray_http_request_from_obj(zend_object *o
 
 static inline skyray_http_response_t *skyray_http_response_from_obj(zend_object *obj) {
     return (skyray_http_response_t*)(obj);
+}
+
+static inline skyray_http_protocol_t *skyray_http_protocol_from_obj(zend_object *obj) {
+    return (skyray_http_protocol_t*)((char*)(obj) - XtOffsetOf(skyray_http_protocol_t, std));;
 }
 
 void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce);

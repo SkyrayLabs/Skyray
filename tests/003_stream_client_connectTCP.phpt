@@ -19,6 +19,7 @@ $stream = $client->connectTCP('127.0.0.1', 2333);
 var_dump(get_class($stream));
 $stream->write("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");
 $data = $stream->read();
+$stream->close();
 echo explode("\r\n", $data)[0] . PHP_EOL;
 echo "==== done ====\n\n";
 

@@ -35,9 +35,11 @@ void skyray_stream_client_object_free(zend_object *object)
     zend_object_std_dtor(&intern->std);
 
     if (intern->protocol_creator) {
+        zval_ptr_dtor(intern->protocol_creator);
         efree(intern->protocol_creator);
     }
     if (intern->reactor) {
+        zval_ptr_dtor(intern->reactor);
         efree(intern->reactor);
     }
 }
@@ -119,6 +121,7 @@ void stream_client_do_connect_blocking(
 
     zend_string *buffer;
 
+    ++GC_REFCOUNT(protocol_obj); //preventing protocol instance be free'd after connection closed.
     while((buffer = skyray_stream_read(stream_intern, 0))) {
         if (buffer->len == 0) {
             zend_string_free(buffer);
@@ -134,9 +137,18 @@ void stream_client_do_connect_blocking(
 static void on_connected(uv_connect_t *req, int status)
 {
     skyray_stream_t *stream = req->data;
+
+    if (status < 0) {
+        zval_ptr_dtor(&stream->protocol);
+        zend_object_release(&stream->std);
+        goto clean;
+    }
+
     skyray_protocol_on_stream_connected(&stream->protocol);
     req->handle->data = req->data;
     skyray_stream_read_start(stream);
+
+clean:
     efree(req);
 }
 

@@ -14,17 +14,13 @@ zend_class_entry *skyray_ce_HttpProtocol;
 zend_string *intern_str_content_type; // Content-Type
 zend_string *intern_str_content_length; // Content-Length
 zend_string *intern_str_application_json; // application/json
-zend_string *intern_str_plain_text; // plain/text
+zend_string *intern_str_text_plain; // text/plain
 zend_string *intern_str_connection; // Connection
 zend_string *intern_str_onRequest;  // onRequest
 
 zend_object_handlers skyray_handler_HttpProtocol;
 
 void skyray_http_protocol_on_request(skyray_http_protocol_t *self);
-
-static inline skyray_http_protocol_t *skyray_http_protocol_from_obj(zend_object *obj) {
-    return (skyray_http_protocol_t*)((char*)(obj) - XtOffsetOf(skyray_http_protocol_t, std));;
-}
 
 int longtobase(zend_ulong value, int base, char *buf, char **retval)
 {
@@ -186,6 +182,7 @@ zend_object * skyray_http_protocol_object_new(zend_class_entry *ce)
     skyray_buffer_reset(&intern->header_name);
     skyray_buffer_reset(&intern->header_value);
 
+    intern->close = 0;
     intern->stream = NULL;
 
     intern->std.handlers = &skyray_handler_HttpProtocol;
@@ -203,6 +200,7 @@ void skyray_http_protocol_object_free(zend_object *object)
 
     if (intern->stream) {
         zend_object_release(intern->stream);
+        intern->stream = NULL;
     }
 
     zend_object_std_dtor(&intern->std);
@@ -213,8 +211,8 @@ void skyray_http_protocol_negotiate_content_type(skyray_http_protocol_t *self, s
     zval *zcontent_type = skyray_http_message_get_header(message, intern_str_content_type, 1);
 
     if (!zcontent_type) {
-        if (!ZVAL_IS_NULL(&message->raw_body)) {
-            skyray_http_message_add_header(message, intern_str_content_type, intern_str_plain_text);
+        if (Z_TYPE_P(&message->raw_body) == IS_STRING || (Z_TYPE_P(&message->raw_body) != IS_STRING && Z_TYPE_P(&message->body) == IS_UNDEF)) {
+            skyray_http_message_add_header(message, intern_str_content_type, intern_str_text_plain);
         } else {
             skyray_http_message_add_header(message, intern_str_content_type, intern_str_application_json);
         }
@@ -304,9 +302,9 @@ void skyray_http_protocol_send_body(skyray_http_protocol_t *self, skyray_http_me
     smart_str buf = {.s = NULL, .a = 0};
     skyray_stream_t *stream = skyray_stream_from_obj(self->stream);
 
-    if (!ZVAL_IS_NULL(&message->raw_body)) {
+    if (Z_TYPE_P(&message->raw_body) == IS_STRING) {
         skyray_http_protocol_write(self, stream, Z_STR_P(&message->raw_body));
-    } else if (!ZVAL_IS_NULL(&message->body)) {
+    } else if (Z_TYPE_P(&message->body) != IS_UNDEF) {
         smart_str_alloc(&buf, 1024, 0);
         php_json_encode(&buf, &message->body, PHP_JSON_UNESCAPED_UNICODE);
         smart_str_0(&buf);
@@ -384,8 +382,9 @@ SKYRAY_METHOD(HttpProtocol, connectStream)
     }
 
     skyray_http_protocol_t *intern = skyray_http_protocol_from_obj(Z_OBJ_P(getThis()));
+    assert(intern->stream == NULL);
     intern->stream = Z_OBJ_P(zstream);
-    zval_add_ref(zstream);
+    zval_addref_p(zstream);
 }
 
 
@@ -446,7 +445,7 @@ PHP_MINIT_FUNCTION(skyray_http_protocol)
     skyray_handler_HttpProtocol.clone_obj = skyray_http_protocol_object_clone;
 
     intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 1));
-    intern_str_plain_text       = zend_new_interned_string(zend_string_init(ZEND_STRL("plain/text"), 1));
+    intern_str_text_plain       = zend_new_interned_string(zend_string_init(ZEND_STRL("text/plain"), 1));
     intern_str_content_type     = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
     intern_str_content_length   = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Length"), 1));
     intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));

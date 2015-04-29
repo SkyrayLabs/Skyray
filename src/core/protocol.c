@@ -50,7 +50,6 @@ void skyray_protocol_on_data_received(zval *protocol, zend_string *data)
 
     ZVAL_STR(&params[0], data);
 
-
     call_user_function(EG(function_table), protocol, &function_name, &retval, 1, params);
     zval_dtor(&function_name);
 
@@ -78,13 +77,15 @@ void skyray_protocol_on_stream_closed(zval *protocol)
 zend_object * skyray_protocol_create_from_factory(zval *creator)
 {
     zval protocol;
+
     call_user_function(EG(function_table), NULL, creator, &protocol, 0, NULL);
 
     if (EG(exception)) {
         skyray_handle_uncaught_exception(EG(exception));
     }
 
-    if (!instanceof_function(Z_OBJCE(protocol), skyray_ce_ProtocolInterface)) {
+    if (Z_TYPE_P(&protocol) != IS_OBJECT || !instanceof_function(Z_OBJCE(protocol), skyray_ce_ProtocolInterface)) {
+        zval_ptr_dtor(&protocol);
         skyray_throw_exception("The protocol created by $protocolCreator must be instance of 'skyray\\core\\ProtocolInterface'");
         return NULL;
     }
