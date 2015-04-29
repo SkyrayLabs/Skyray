@@ -21,8 +21,8 @@ void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce)
     zend_hash_init(&self->headers, 32, NULL, ZVAL_PTR_DTOR, 0);
     zend_hash_init(&self->iheaders, 32, NULL, ZVAL_PTR_DTOR, 0);
 
-    ZVAL_NULL(&self->body);
-    ZVAL_NULL(&self->raw_body);
+    ZVAL_UNDEF(&self->body);
+    ZVAL_UNDEF(&self->raw_body);
 
     zend_object_std_init(&self->std, ce);
     object_properties_init(&self->std, ce);
@@ -294,7 +294,10 @@ SKYRAY_METHOD(HttpMessage, getBody)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
-    RETURN_ZVAL(&intern->body, 1, 0);
+
+    if (Z_TYPE_P(&intern->body) != IS_UNDEF) {
+        RETURN_ZVAL(&intern->body, 1, 0);
+    }
 }
 
 SKYRAY_METHOD(HttpMessage, setBody)
@@ -318,7 +321,10 @@ SKYRAY_METHOD(HttpMessage, getRawBody)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
-    RETURN_ZVAL(&intern->raw_body, 1, 0);
+
+    if (Z_TYPE_P(&intern->raw_body) != IS_UNDEF) {
+        RETURN_ZVAL(&intern->raw_body, 1, 0);
+    }
 }
 
 SKYRAY_METHOD(HttpMessage, setRawBody)
