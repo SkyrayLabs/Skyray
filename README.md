@@ -3,7 +3,7 @@
 Skyray provides non-blocking I/O and multi-processing facilities for PHP, it is intended 
 be to as flexible as possible to suit for various applications.
 
-[![](https://travis-ci.org/bixuehujin/skyray.png?branch=master)](https://travis-ci.org/bixuehujin/skyray)
+[![](https://travis-ci.org/SkyrayLabs/Skyray.png?branch=master)](https://travis-ci.org/bixuehujin/skyray)
 
 ## Features
 
