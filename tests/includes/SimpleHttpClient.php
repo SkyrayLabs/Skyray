@@ -119,7 +119,7 @@ class ClientHttpProtocol implements StreamProtocolInterface
 
         $response = new SimpleHttpResponse();
 
-        $responseParts = explode(' ', array_shift($headerLines));
+        $responseParts = explode(' ', array_shift($headerLines), 3);
         $response->protocolVersion = explode('/', $responseParts[0])[1];
         $response->statusCode = $responseParts[1];
         $response->statusPhase = $responseParts[2];
@@ -153,11 +153,11 @@ class ClientHttpProtocol implements StreamProtocolInterface
 
     public function streamClosed()
     {
-        $GLOBALS['close_count'] += 1;
+        @$GLOBALS['close_count'] += 1;
     }
 
     public function __destruct()
     {
-        $GLOBALS['client_destruct_count'] += 1;
+        @$GLOBALS['client_destruct_count'] += 1;
     }
 }
