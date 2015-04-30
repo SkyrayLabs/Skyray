@@ -73,7 +73,7 @@ static inline int skyray_throw_exception_from_errno(int errcode)
 }
 
 
-void skyray_handle_uncaught_exception(zend_object *old_exception);
+void skyray_handle_uncaught_exception(zend_object *old_exception, zend_bool halt);
 
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_empty, 0, 0, 0)

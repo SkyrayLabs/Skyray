@@ -13,9 +13,10 @@ zend_class_entry * skyray_ce_UnknownPropertyException;
 zend_class_entry * skyray_ce_ProtocolInterface;
 
 
-void skyray_handle_uncaught_exception(zend_object *old_exception)
+void skyray_handle_uncaught_exception(zend_object *old_exception, zend_bool halt)
 {
     EG(exception) = NULL;
+    zend_bool has_error = 0;
     if (Z_TYPE(EG(user_exception_handler)) != IS_UNDEF) {
         zval orig_user_exception_handler;
         zval params[1], retval2;
@@ -26,12 +27,16 @@ void skyray_handle_uncaught_exception(zend_object *old_exception)
             zval_ptr_dtor(&retval2);
             OBJ_RELEASE(old_exception);
             if (EG(exception)) {
-                zend_exception_error(EG(exception), E_ERROR);
+                has_error = 1;
             }
         } else {
-            zend_exception_error(old_exception, E_ERROR);
+            has_error = 1;
         }
     } else {
+        has_error = 1;
+    }
+
+    if (has_error && halt) {
         zend_exception_error(old_exception, E_ERROR);
     }
 }

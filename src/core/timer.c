@@ -65,7 +65,7 @@ static void timer_callback(uv_timer_t *uv_timer)
 
     zval_ptr_dtor(&retval);
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 
     if (uv_timer_get_repeat(&timer->timer) == 0) {

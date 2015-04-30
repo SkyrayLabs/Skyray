@@ -21,7 +21,7 @@ void skyray_protocol_on_connect_stream(zval *protocol, zend_object *stream)
     zval_dtor(&function_name);
 
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 }
 
@@ -36,7 +36,7 @@ void skyray_protocol_on_stream_connected(zval *protocol)
     zval_dtor(&function_name);
 
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 }
 
@@ -54,7 +54,7 @@ void skyray_protocol_on_data_received(zval *protocol, zend_string *data)
     zval_dtor(&function_name);
 
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 }
 
@@ -69,7 +69,7 @@ void skyray_protocol_on_stream_closed(zval *protocol)
     zval_dtor(&function_name);
 
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 }
 
@@ -81,7 +81,7 @@ zend_object * skyray_protocol_create_from_factory(zval *creator)
     call_user_function(EG(function_table), NULL, creator, &protocol, 0, NULL);
 
     if (EG(exception)) {
-        skyray_handle_uncaught_exception(EG(exception));
+        skyray_handle_uncaught_exception(EG(exception), 0);
     }
 
     if (Z_TYPE_P(&protocol) != IS_OBJECT || !instanceof_function(Z_OBJCE(protocol), skyray_ce_ProtocolInterface)) {
