@@ -10,6 +10,16 @@
 zend_class_entry *skyray_ce_HttpMessage;
 zend_object_handlers skyray_handler_HttpMessage;
 
+zend_string *intern_str_content_type; // Content-Type
+zend_string *intern_str_content_length; // Content-Length
+zend_string *intern_str_application_json; // application/json
+zend_string *intern_str_text_plain; // text/plain
+zend_string *intern_str_connection; // Connection
+zend_string *intern_str_server; // Server
+zend_string *intern_str_date; // Date
+zend_string *intern_str_cookie; // "Cookie"
+
+
 static inline skyray_http_message_t *skyray_http_message_from_obj(zend_object *obj) {
     return (skyray_http_message_t*)(obj);
 }
@@ -395,6 +405,15 @@ PHP_MINIT_FUNCTION(skyray_http_message)
 
     memcpy(&skyray_handler_HttpMessage, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     skyray_handler_HttpMessage.free_obj = skyray_http_message_object_free;
+
+    intern_str_application_json = zend_new_interned_string(zend_string_init(ZEND_STRL("application/json"), 1));
+    intern_str_text_plain       = zend_new_interned_string(zend_string_init(ZEND_STRL("text/plain"), 1));
+    intern_str_content_type     = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
+    intern_str_content_length   = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Length"), 1));
+    intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));
+    intern_str_server           = zend_new_interned_string(zend_string_init(ZEND_STRL("Server"), 1));
+    intern_str_date             = zend_new_interned_string(zend_string_init(ZEND_STRL("Date"), 1));
+    intern_str_cookie           = zend_new_interned_string(zend_string_init(ZEND_STRL("Cookie"), 0));
 
     return SUCCESS;
 }

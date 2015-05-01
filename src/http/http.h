@@ -19,6 +19,20 @@ extern zend_class_entry *skyray_ce_HttpResponse;
 extern zend_class_entry *skyray_ce_HttpProtocol;
 extern zend_class_entry *skyray_ce_HttpServer;
 
+
+extern zend_string *intern_str_content_type; // Content-Type
+extern zend_string *intern_str_content_length; // Content-Length
+extern zend_string *intern_str_application_json; // application/json
+extern zend_string *intern_str_text_plain; // text/plain
+extern zend_string *intern_str_connection; // Connection
+extern zend_string *intern_str_server; // Server
+extern zend_string *intern_str_date; // Date
+extern zend_string *intern_str_cookie; // "Cookie"
+
+extern zend_string *intern_str_param_delimiter; // "; "
+extern zend_string *intern_str_equal_delimiter; // "="
+
+
 enum {
     SR_HTTP_VERSION_10 = 10,
     SR_HTTP_VERSION_11 = 11,

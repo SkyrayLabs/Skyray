@@ -12,7 +12,6 @@ zend_object_handlers skyray_handler_HttpRequest;
 
 zend_string *intern_str_param_delimiter; // "; "
 zend_string *intern_str_equal_delimiter; // "="
-zend_string *intern_str_cookie; // "Cookie"
 
 zend_object * skyray_http_request_object_new(zend_class_entry *ce)
 {
@@ -280,7 +279,6 @@ PHP_MINIT_FUNCTION(skyray_http_request)
 
     intern_str_param_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("; "), 0));
     intern_str_equal_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("="), 0));
-    intern_str_cookie          = zend_new_interned_string(zend_string_init(ZEND_STRL("Cookie"), 0));
 
     return SUCCESS;
 }
