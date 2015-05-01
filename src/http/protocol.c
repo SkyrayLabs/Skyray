@@ -16,6 +16,8 @@ zend_string *intern_str_content_length; // Content-Length
 zend_string *intern_str_application_json; // application/json
 zend_string *intern_str_text_plain; // text/plain
 zend_string *intern_str_connection; // Connection
+zend_string *intern_str_server; // Server
+zend_string *intern_str_date; // Date
 zend_string *intern_str_onRequest;  // onRequest
 
 zend_object_handlers skyray_handler_HttpProtocol;
@@ -372,6 +374,20 @@ void skyray_http_protocol_send_headers(skyray_http_protocol_t *self, skyray_http
 
     skyray_buffer_init(&header_s, 2048);
 
+    if (!skyray_http_message_has_header(message, intern_str_server)) {
+        skyray_buffer_appendl(&header_s, ZEND_STRL("Server: Skyray Http Server\r\n"));
+    }
+
+    if (!skyray_http_message_has_header(message, intern_str_date)) {
+        time_t tm;
+        time(&tm);
+        char *buf = ctime(&tm);
+
+        skyray_buffer_appendl(&header_s, ZEND_STRL("Date: "));
+        skyray_buffer_appendl(&header_s, buf, strlen(buf) - 1);
+        skyray_buffer_appendl(&header_s, ZEND_STRL("\r\n"));
+    }
+
     zend_hash_internal_pointer_reset(ht);
     while(zend_hash_has_more_elements(ht) == SUCCESS) {
 
@@ -603,6 +619,8 @@ PHP_MINIT_FUNCTION(skyray_http_protocol)
     intern_str_content_type     = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Type"), 1));
     intern_str_content_length   = zend_new_interned_string(zend_string_init(ZEND_STRL("Content-Length"), 1));
     intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));
+    intern_str_server           = zend_new_interned_string(zend_string_init(ZEND_STRL("Server"), 1));
+    intern_str_date             = zend_new_interned_string(zend_string_init(ZEND_STRL("Date"), 1));
     intern_str_onRequest        = zend_new_interned_string(zend_string_init(ZEND_STRL("onRequest"), 1));
 
     return SUCCESS;
