@@ -10,6 +10,10 @@
 zend_class_entry *skyray_ce_HttpRequest;
 zend_object_handlers skyray_handler_HttpRequest;
 
+zend_string *intern_str_param_delimiter; // "; "
+zend_string *intern_str_equal_delimiter; // "="
+zend_string *intern_str_cookie; // "Cookie"
+
 zend_object * skyray_http_request_object_new(zend_class_entry *ce)
 {
     skyray_http_request_t *intern;
@@ -40,6 +44,70 @@ void skyray_http_request_object_free(zend_object *object)
     zval_dtor(&intern->uri);
 
     skyray_http_message_object_free(object);
+}
+
+void skyray_http_request_resolve_cookies_if_needed(skyray_http_request_t *self)
+{
+    if (!ZVAL_IS_NULL(&self->cookie_params)) {
+        return;
+    }
+    zval *lines = skyray_http_message_get_header(&self->message, intern_str_cookie, 0);
+    if (!lines) {
+        return;
+    }
+    array_init(&self->cookie_params);
+
+    zend_array *ht = Z_ARR_P(lines);
+    zend_array *ht2;
+    zval tmp, *data;;
+
+    zend_hash_internal_pointer_reset(ht);
+    while(zend_hash_has_more_elements(ht) == SUCCESS) {
+
+        array_init(&tmp);
+        data = zend_hash_get_current_data(ht);
+        php_explode(intern_str_param_delimiter, Z_STR_P(data), &tmp, ZEND_LONG_MAX);
+
+        ht2 = Z_ARR_P(&tmp);
+
+        zend_hash_internal_pointer_reset(ht2);
+        while (zend_hash_has_more_elements(ht2) == SUCCESS) {
+            data = zend_hash_get_current_data(ht2);
+
+            char *c = strchr(Z_STR_P(data)->val, '=');
+            int len = c - Z_STR_P(data)->val;
+            add_assoc_str_ex(&self->cookie_params, Z_STR_P(data)->val, len, zend_string_init(c + 1, Z_STR_P(data)->len - len - 1, 0));
+
+            zend_hash_move_forward(ht2);
+        }
+
+        zval_ptr_dtor(&tmp);
+
+        zend_hash_move_forward(ht);
+    }
+}
+
+void skyray_http_request_resolve_queries_if_needed(skyray_http_request_t *self)
+{
+    if (!ZVAL_IS_NULL(&self->query_params) || ZVAL_IS_NULL(&self->uri)) {
+        return;
+    }
+
+    array_init(&self->query_params);
+
+    php_url *url = php_url_parse_ex(Z_STR(self->uri)->val, Z_STR(self->uri)->len);
+    if (!url->query) {
+        php_url_free(url);
+        return;
+    }
+
+    zend_string *query = zend_string_init(url->query, strlen(url->query), 0);
+    char *res = estrdup(url->query);
+
+    sapi_module.treat_data(PARSE_STRING, res, &self->query_params);
+
+    zend_string_free(query);
+    php_url_free(url);
 }
 
 SKYRAY_METHOD(HttpRequest, getMethod)
@@ -102,7 +170,7 @@ SKYRAY_METHOD(HttpRequest, setUri)
 
     zval_dtor(&intern->uri);
     ZVAL_STR(&intern->uri, uri);
-    zval_add_ref(&intern->uri);
+    zval_addref_p(&intern->uri);
 
     RETURN_ZVAL(getThis(), 1, 0);
 }
@@ -115,6 +183,7 @@ SKYRAY_METHOD(HttpRequest, getCookieParams)
 
     skyray_http_request_t *intern = skyray_http_request_from_obj(Z_OBJ_P(getThis()));
 
+    skyray_http_request_resolve_cookies_if_needed(intern);
     if (ZVAL_IS_NULL(&intern->cookie_params)) {
         RETURN_EMPTY_ARR();
     } else {
@@ -144,6 +213,8 @@ SKYRAY_METHOD(HttpRequest, getQueryParams)
     }
 
     skyray_http_request_t *intern = skyray_http_request_from_obj(Z_OBJ_P(getThis()));
+
+    skyray_http_request_resolve_queries_if_needed(intern);
 
     if (ZVAL_IS_NULL(&intern->query_params)) {
         RETURN_EMPTY_ARR();
@@ -206,6 +277,10 @@ PHP_MINIT_FUNCTION(skyray_http_request)
     memcpy(&skyray_handler_HttpRequest, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     skyray_handler_HttpRequest.free_obj = skyray_http_request_object_free;
     skyray_handler_HttpRequest.clone_obj = skyray_http_request_object_clone;
+
+    intern_str_param_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("; "), 0));
+    intern_str_equal_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("="), 0));
+    intern_str_cookie          = zend_new_interned_string(zend_string_init(ZEND_STRL("Cookie"), 0));
 
     return SUCCESS;
 }

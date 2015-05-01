@@ -14,7 +14,9 @@
 
 #include "php.h"
 #include "php_ini.h"
+#include "php_variables.h"
 #include "ext/standard/info.h"
+#include "ext/standard/url.h"
 #include "ext/json/php_json.h"
 #include "Zend/zend_exceptions.h"
 #include "Zend/zend_smart_str.h"
