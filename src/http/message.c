@@ -155,6 +155,25 @@ void skyray_http_message_remove_header(skyray_http_message_t *self, zend_string 
     zend_string_release(lname);
 }
 
+void skyray_http_message_parse_rawbody(skyray_http_message_t *self)
+{
+    zval *type = skyray_http_message_get_header(self, intern_str_content_type, 1);
+    if (!type) {
+        return;
+    }
+
+    zend_string *raw_body = Z_STR_P(&self->raw_body);
+    if (strncasecmp(Z_STR_P(type)->val, ZEND_STRL("application/json")) == 0) {
+        php_json_decode(&self->body, raw_body->val, raw_body->len, 1, 100);
+    }else if (strncasecmp(Z_STR_P(type)->val, ZEND_STRL("application/x-www-form-urlencoded")) == 0) {
+        char *res = estrndup(raw_body->val, raw_body->len);
+        array_init(&self->body);
+        sapi_module.treat_data(PARSE_STRING, res, &self->body);
+    }else {
+        ZVAL_STR(&self->body, zend_string_dup(raw_body, 0));
+    }
+}
+
 SKYRAY_METHOD(HttpMessage, getProtocolVersion)
 {
     if (zend_parse_parameters_none() ==  FAILURE) {
@@ -304,6 +323,10 @@ SKYRAY_METHOD(HttpMessage, getBody)
     }
 
     skyray_http_message_t *intern = skyray_http_message_from_obj(Z_OBJ_P(getThis()));
+
+    if (Z_TYPE_P(&intern->body) == IS_UNDEF && Z_TYPE_P(&intern->raw_body) != IS_UNDEF) {
+        skyray_http_message_parse_rawbody(intern);
+    }
 
     if (Z_TYPE_P(&intern->body) != IS_UNDEF) {
         RETURN_ZVAL(&intern->body, 1, 0);

@@ -32,6 +32,24 @@ $message->setBody([])->setRawBody('');
 
 var_dump($message->getBody());
 var_dump($message->getRawBody());
+
+echo "=== parsing raw body json ===\n";
+$message = new Message();
+$message->setHeader('Content-Type', 'application/json; charset=UTF-8');
+$message->setRawBody(json_encode(['foo' => 'bar']));
+var_dump($message->getBody());
+
+echo "=== parsing raw body url-encoded ==\n";
+$message = new Message();
+$message->setHeader('Content-Type', 'application/x-www-form-urlencoded');
+$message->setRawBody('foo=bar&bar=foo');
+var_dump($message->getBody());
+
+echo "=== parsing raw body unknown ==\n";
+$message = new Message();
+$message->setHeader('Content-Type', 'application/unknown');
+$message->setRawBody('foo=bar&bar=foo');
+var_dump($message->getBody());
 ?>
 --EXPECTF--
 string(19) "skyray\http\Message"
@@ -62,3 +80,17 @@ NULL
 array(0) {
 }
 string(0) ""
+=== parsing raw body json ===
+array(1) {
+  ["foo"]=>
+  string(3) "bar"
+}
+=== parsing raw body url-encoded ==
+array(2) {
+  ["foo"]=>
+  string(3) "bar"
+  ["bar"]=>
+  string(3) "foo"
+}
+=== parsing raw body unknown ==
+string(15) "foo=bar&bar=foo"
