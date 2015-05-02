@@ -140,7 +140,6 @@ static void on_connected(uv_connect_t *req, int status)
 
     if (status < 0) {
         zval_ptr_dtor(&stream->protocol);
-        zend_object_release(&stream->std);
         goto clean;
     }
 
