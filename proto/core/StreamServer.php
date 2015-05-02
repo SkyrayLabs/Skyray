@@ -72,11 +72,17 @@ class StreamServer extends Object
     }
 
     /**
-     * Returns the stats of the server
-     *
-     * @return array Array of stats information.
+     * Starts the underlying reactor, simply a shortcut of Reactor::run().
      */
-    public function stats()
+    public function start()
+    {
+
+    }
+
+    /**
+     * This method is a shortcut for Reactor::stop().
+     */
+    public function stop()
     {
 
     }
