@@ -436,7 +436,7 @@ PHP_MINIT_FUNCTION(skyray_http_message)
     intern_str_connection       = zend_new_interned_string(zend_string_init(ZEND_STRL("Connection"), 1));
     intern_str_server           = zend_new_interned_string(zend_string_init(ZEND_STRL("Server"), 1));
     intern_str_date             = zend_new_interned_string(zend_string_init(ZEND_STRL("Date"), 1));
-    intern_str_cookie           = zend_new_interned_string(zend_string_init(ZEND_STRL("Cookie"), 0));
+    intern_str_cookie           = zend_new_interned_string(zend_string_init(ZEND_STRL("Cookie"), 1));
 
     return SUCCESS;
 }

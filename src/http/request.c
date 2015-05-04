@@ -277,8 +277,8 @@ PHP_MINIT_FUNCTION(skyray_http_request)
     skyray_handler_HttpRequest.free_obj = skyray_http_request_object_free;
     skyray_handler_HttpRequest.clone_obj = skyray_http_request_object_clone;
 
-    intern_str_param_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("; "), 0));
-    intern_str_equal_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("="), 0));
+    intern_str_param_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("; "), 1));
+    intern_str_equal_delimiter = zend_new_interned_string(zend_string_init(ZEND_STRL("="), 1));
 
     return SUCCESS;
 }
