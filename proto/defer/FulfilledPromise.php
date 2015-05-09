@@ -1,17 +1,19 @@
 <?php
+/**
+ * Created by PhpStorm.
+ * User: hujin
+ * Date: 15-5-10
+ */
 
 namespace skyray\defer;
 
 /**
- * Class Promise
+ * Class FulfilledPromise
  *
  * @package skyray\defer
  * @since 0.1
- *
- * @method finally() see _finally()
- * @method catch() see _catch()
  */
-class Promise
+class FulfilledPromise
 {
     /**
      * @param callable $onFulfilled
@@ -30,31 +32,6 @@ class Promise
      * @param callable $onProgress
      */
     public function done($onFulfilled = null, $onRejected = null, $onProgress = null)
-    {
-
-    }
-
-    public function _catch($errorHandler = null)
-    {
-
-    }
-
-    public function _finally($handler = null, $notifyHandler = null)
-    {
-
-    }
-
-    public static function resolve($value)
-    {
-
-    }
-
-    public static function reject($value)
-    {
-
-    }
-
-    public static function all()
     {
 
     }

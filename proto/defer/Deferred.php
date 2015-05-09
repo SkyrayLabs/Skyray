@@ -6,8 +6,17 @@ namespace skyray\defer;
  * Class Deferred
  *
  * @package skyray\defer
+ * @since 0.1
  */
-class Deferred {
+class Deferred
+{
+    /**
+     * @return Promise
+     */
+    public function promise()
+    {
+
+    }
 
     public function resolve($value = null)
     {
