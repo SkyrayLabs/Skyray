@@ -51,6 +51,11 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 #define SKYRAY_ME(classname, name, arg_info, flags)    ZEND_FENTRY(name, SKYRAY_MN(classname##_##name), arg_info, flags)
 #define SKYRAY_ABSTRACT_ME ZEND_ABSTRACT_ME
 
+#define SKYRAY_MINIT_FUNCTION(module) PHP_MINIT_FUNCTION(skyray_##module)
+
+#define SKYRAY_MINIT(module) zm_startup_skyray_##module
+
+
 #define SKYRAY_CAST(variable, type)  (type)(variable)
 
 #define skyray_throw_exception(format, ...)  \

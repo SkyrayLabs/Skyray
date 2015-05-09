@@ -115,6 +115,10 @@ PHP_MINIT_FUNCTION(skyray)
     PHP_MINIT(skyray_http_protocol)(INIT_FUNC_ARGS_PASSTHRU);
     PHP_MINIT(skyray_http_server)(INIT_FUNC_ARGS_PASSTHRU);
 
+    SKYRAY_MINIT(deferred)(INIT_FUNC_ARGS_PASSTHRU);
+    SKYRAY_MINIT(promise)(INIT_FUNC_ARGS_PASSTHRU);
+    SKYRAY_MINIT(fulfilled_promise)(INIT_FUNC_ARGS_PASSTHRU);
+
     return SUCCESS;
 }
 /* }}} */
