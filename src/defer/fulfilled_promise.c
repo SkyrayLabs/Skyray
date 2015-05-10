@@ -53,23 +53,6 @@ skyray_fulfilled_promise_t * skyray_fulfilled_promise_new(zval *value, zend_bool
     return intern;
 }
 
-static inline void call_fullfilled_cb(zval *on_fulfilled, zval *value, zval *retval)
-{
-    zval params[1];
-    zval retval_local;
-
-    if (retval == NULL) {
-        retval = &retval_local;
-    }
-
-    ZVAL_COPY_VALUE(&params[0], value);
-    call_user_function(NULL, NULL, on_fulfilled, retval, 1, params);
-
-    if (!EG(exception) && retval == &retval_local) {
-        zval_ptr_dtor(retval);
-    }
-}
-
 skyray_promise_t * skyray_fulfilled_promise_then(skyray_fulfilled_promise_t *self, zval *on_fulfilled)
 {
     if (on_fulfilled == NULL && !zend_is_callable(on_fulfilled, 0, NULL)) {
@@ -83,12 +66,14 @@ skyray_promise_t * skyray_fulfilled_promise_then(skyray_fulfilled_promise_t *sel
     promise = skyray_promise_from_obj(Z_OBJ_P(&zpromise));
 
     zval value;
-    call_fullfilled_cb(on_fulfilled, &self->result, &value);
+    skyray_promise_call_handler(on_fulfilled, &self->result, &value);
 
     if (EG(exception)) {
-        //reject
+        ZVAL_OBJ(&value, EG(exception));
+        EG(exception) = NULL;
+        skyray_promise_do_reject(promise, &value, 0);
     } else {
-        skyray_promise_resolver_resolve(promise, &value, 0);
+        skyray_promise_do_resolve(promise, &value, 0);
     }
 
     return promise;
@@ -100,7 +85,7 @@ void skyray_fulfilled_promise_done(skyray_fulfilled_promise_t *self, zval *on_fu
         return;
     }
 
-    call_fullfilled_cb(on_fulfilled, &self->result, NULL);
+    skyray_promise_call_handler(on_fulfilled, &self->result, NULL);
 }
 
 SKYRAY_METHOD(fulfilled_promise, __construct)

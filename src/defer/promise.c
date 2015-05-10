@@ -112,9 +112,13 @@ void skyray_promise_done(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
     }
 }
 
-void skyray_promise_resolver_resolve(skyray_promise_t *self, zval *value, zend_bool is_copy_required)
+void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is_copy_required)
 {
     zval *result, tmp;
+
+    if (!ZVAL_IS_NULL(&self->result)) {
+        return;
+    }
 
     if (skyray_is_promise_instance(value)) {
         result = skyray_promise_unwrap(skyray_promise_from_obj(Z_OBJ_P(value)));
@@ -129,6 +133,20 @@ void skyray_promise_resolver_resolve(skyray_promise_t *self, zval *value, zend_b
     } else {
         ZVAL_COPY(&self->result, result);
     }
+
+    // call callbacks
+}
+
+void skyray_promise_do_reject(skyray_promise_t *self, zval *reason, zend_bool is_copy_required)
+{
+    if (!ZVAL_IS_NULL(&self->result)) {
+        return;
+    }
+
+    skyray_fulfilled_promise_t *promise = skyray_rejected_promise_new(reason, is_copy_required);
+    ZVAL_OBJ(&self->result, &promise->std);
+
+    // call callbacks
 }
 
 SKYRAY_METHOD(promise, __construct)
@@ -183,6 +201,8 @@ SKYRAY_METHOD(promise, reject)
         return;
     }
 
+    skyray_rejected_promise_t *promise = skyray_rejected_promise_new(reason, 1);
+    RETURN_OBJ(&promise->std);
 }
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
