@@ -14,6 +14,90 @@ zend_object_handlers skyray_handler_Promise;
 zend_string *intern_str_then;
 zend_string *intern_str_done;
 
+typedef struct _resolve_context {
+    skyray_promise_t *self;
+    skyray_promise_t *late;
+    zval callback;
+} promise_resolve_context_t;
+
+static promise_resolve_context_t * promise_resolve_context_create(skyray_promise_t *self, zval *callback, skyray_promise_t *late)
+{
+    promise_resolve_context_t *context = emalloc(sizeof(promise_resolve_context_t));
+    // if context->self is NULL, this context is created for done()
+    context->self = self;
+    if (self) {
+        GC_REFCOUNT(&self->std) ++;
+    }
+
+    ZVAL_NULL(&context->callback);
+
+    context->late = late;
+
+    if (callback) {
+        ZVAL_COPY(&context->callback, callback);
+    }
+
+    return context;
+}
+
+static void promise_resolve_context_call(promise_resolve_context_t *context, zval *value)
+{
+    zval retval;
+
+    if (!context->self) {
+        if (!ZVAL_IS_NULL(&context->callback)) {
+            skyray_promise_call_handler(&context->callback, value, &retval);
+            zval_ptr_dtor(&retval);
+        }
+        return;
+    }
+
+    if (!ZVAL_IS_NULL(&context->callback)) {
+        skyray_promise_call_handler(&context->callback, value, &retval);
+
+        if (!EG(exception)) {
+            skyray_promise_do_resolve(context->self, &retval, 0);
+        } else {
+            ZVAL_OBJ(&retval, EG(exception));
+            EG(exception) = NULL;
+            skyray_promise_do_reject(context->self, &retval, 0);
+        }
+    } else {
+        skyray_promise_do_resolve(context->self, &context->late->result, 0);
+    }
+}
+
+static void promise_resolve_context_free(zval *value)
+{
+    promise_resolve_context_t *context = Z_PTR_P(value);
+
+    if (context->self) {
+        zend_object_release(&context->self->std);
+    }
+
+    zval_ptr_dtor(&context->callback);
+    efree(context);
+}
+
+static void call_resolved_handlers(skyray_promise_t *self, zend_array *on_fulfilled, zend_array *on_rejected)
+{
+    skyray_promise_t *promise = skyray_promise_from_obj(Z_OBJ_P(&self->result));
+    zend_array *handlers;
+
+    if (instanceof_function(Z_OBJCE_P(&self->result), skyray_ce_FulfilledPromise)) {
+        handlers = on_fulfilled;
+    } else {
+        handlers = on_rejected;
+    }
+
+    zend_hash_internal_pointer_reset(handlers);
+    while(zend_hash_has_more_elements(handlers) == SUCCESS) {
+        promise_resolve_context_t *context = zend_hash_get_current_data_ptr(handlers);
+        promise_resolve_context_call(context, &promise->result);
+        zend_hash_move_forward(handlers);
+    }
+}
+
 void skyray_promise_object_init(skyray_promise_t *self, zend_class_entry *ce)
 {
     zend_object_std_init(&self->std, ce);
@@ -21,9 +105,9 @@ void skyray_promise_object_init(skyray_promise_t *self, zend_class_entry *ce)
 
     ZVAL_NULL(&self->result);
 
-    zend_llist_init(&self->on_fulfilled, 10, zend_object_release, 0);
-    zend_llist_init(&self->on_rejcted, 10, zend_object_release, 0);
-    zend_llist_init(&self->on_notify, 10, zend_object_release, 0);
+    zend_hash_init(&self->on_fulfilled, 8, NULL, promise_resolve_context_free, 0);
+    zend_hash_init(&self->on_rejcted, 8, NULL, promise_resolve_context_free, 0);
+    zend_hash_init(&self->on_notify, 8, NULL, promise_resolve_context_free, 0);
 }
 
 zend_object * skyray_promise_object_new(zend_class_entry *ce)
@@ -41,26 +125,40 @@ void skyray_promise_object_free(zend_object *object)
 {
     skyray_promise_t *intern = skyray_promise_from_obj(object);
 
-    zend_llist_destroy(&intern->on_fulfilled);
-    zend_llist_destroy(&intern->on_rejcted);
-    zend_llist_destroy(&intern->on_notify);
+    zend_hash_destroy(&intern->on_fulfilled);
+    zend_hash_destroy(&intern->on_rejcted);
+    zend_hash_destroy(&intern->on_notify);
 
     zval_ptr_dtor(&intern->result);
 
     zend_object_std_dtor(&intern->std);
 }
 
+zval* skyray_promise_unwrap_zval(zval *promise)
+{
+    zval *retval = promise;
+    skyray_promise_t *tmp;
+
+    while (!skyray_is_resolved_promise(promise)) {
+        tmp = skyray_promise_from_obj(Z_OBJ_P(retval));
+        retval = &tmp->result;
+    }
+
+    return retval;
+}
+
 zval* skyray_promise_unwrap(skyray_promise_t *promise)
 {
     zval *retval = &promise->result;
 
-    while (skyray_is_promise_instance(retval)) {
+    while (!skyray_is_resolved_promise(retval)) {
         promise = skyray_promise_from_obj(Z_OBJ_P(retval));
         retval = &promise->result;
     }
 
     return retval;
 }
+
 
 void skyray_promise_then(skyray_promise_t *self, zval *on_fulfilled, zval *on_rejected, zval *retval)
 {
@@ -84,6 +182,25 @@ void skyray_promise_then(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
         call_user_function(NULL, result, &function_name, retval, 2, params);
 
         assert(EG(exception) == NULL);
+    } else {
+        object_init_ex(retval, skyray_ce_Promise);
+        skyray_promise_t *promise = skyray_promise_from_obj(Z_OBJ_P(retval));
+
+        promise_resolve_context_t *context;
+
+        if (on_fulfilled != NULL && !ZVAL_IS_NULL(on_fulfilled)) {
+            context = promise_resolve_context_create(promise, on_fulfilled, NULL);
+        } else {
+            context = promise_resolve_context_create(promise, NULL, self);
+        }
+        zend_hash_next_index_insert_ptr(&self->on_fulfilled, context);
+
+        if (on_rejected != NULL && !ZVAL_IS_NULL(on_rejected)) {
+            context = promise_resolve_context_create(promise, on_rejected, NULL);
+        } else {
+            context = promise_resolve_context_create(promise, NULL, self);
+        }
+        zend_hash_next_index_insert_ptr(&self->on_rejcted, context);
     }
 }
 
@@ -109,6 +226,20 @@ void skyray_promise_done(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
         call_user_function(NULL, result, &function_name, &retval, 2, params);
 
         zval_ptr_dtor(&retval);
+    } else {
+        promise_resolve_context_t *context;
+
+        if (on_fulfilled != NULL && !ZVAL_IS_NULL(on_fulfilled)) {
+            context = promise_resolve_context_create(NULL, on_fulfilled, NULL);
+            zend_hash_next_index_insert_ptr(&self->on_fulfilled, context);
+        }
+
+        if (on_rejected != NULL && !ZVAL_IS_NULL(on_rejected)) {
+            context = promise_resolve_context_create(NULL, on_rejected, NULL);
+        } else {
+            context = promise_resolve_context_create(NULL, NULL, self);
+        }
+        zend_hash_next_index_insert_ptr(&self->on_rejcted, context);
     }
 }
 
@@ -121,7 +252,8 @@ void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is
     }
 
     if (skyray_is_promise_instance(value)) {
-        result = skyray_promise_unwrap(skyray_promise_from_obj(Z_OBJ_P(value)));
+
+        result = skyray_promise_unwrap_zval(value);
     } else {
         skyray_fulfilled_promise_t *promise = skyray_fulfilled_promise_new(value, is_copy_required);
         ZVAL_OBJ(&tmp, &promise->std);
@@ -134,7 +266,7 @@ void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is
         ZVAL_COPY(&self->result, result);
     }
 
-    // call callbacks
+    call_resolved_handlers(self, &self->on_fulfilled, &self->on_rejcted);
 }
 
 void skyray_promise_do_reject(skyray_promise_t *self, zval *reason, zend_bool is_copy_required)
@@ -146,7 +278,9 @@ void skyray_promise_do_reject(skyray_promise_t *self, zval *reason, zend_bool is
     skyray_fulfilled_promise_t *promise = skyray_rejected_promise_new(reason, is_copy_required);
     ZVAL_OBJ(&self->result, &promise->std);
 
-    // call callbacks
+    skyray_promise_t *resolved = skyray_promise_from_obj(Z_OBJ_P(&self->result));
+
+    call_resolved_handlers(self, &self->on_fulfilled, &self->on_rejcted);
 }
 
 SKYRAY_METHOD(promise, __construct)
@@ -190,6 +324,7 @@ SKYRAY_METHOD(promise, resolve)
     }
 
     skyray_fulfilled_promise_t *promise = skyray_fulfilled_promise_new(value, 1);
+
     RETURN_OBJ(&promise->std);
 }
 
@@ -250,4 +385,3 @@ SKYRAY_MINIT_FUNCTION(promise)
 
     return SUCCESS;
 }
-

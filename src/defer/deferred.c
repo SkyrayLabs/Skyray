@@ -77,7 +77,9 @@ SKYRAY_METHOD(deferred, resolve)
         return;
     }
 
-
+    skyray_deferred_t *intern = skyray_deferred_from_obj(Z_OBJ_P(getThis()));
+    skyray_promise_t *promise = skyray_promise_from_obj(intern->promise);
+    skyray_promise_do_resolve(promise, value, 1);
 }
 
 SKYRAY_METHOD(deferred, reject)

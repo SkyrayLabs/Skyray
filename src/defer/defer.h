@@ -20,9 +20,9 @@ extern zend_class_entry *skyray_ce_Deferred;
 
 typedef struct _skyray_promise {
     zval result;
-    zend_llist on_fulfilled;
-    zend_llist on_rejcted;
-    zend_llist on_notify;
+    zend_array on_fulfilled;
+    zend_array on_rejcted;
+    zend_array on_notify;
     zend_object std;
 }skyray_promise_t;
 
@@ -77,6 +77,8 @@ static inline void skyray_promise_call_handler(zval *handler, zval *value, zval 
 }
 
 void skyray_promise_object_init(skyray_promise_t *self, zend_class_entry *ce);
+void skyray_promise_object_free(zend_object *object);
+
 skyray_fulfilled_promise_t * skyray_fulfilled_promise_new(zval *value, zend_bool is_copy_required);
 skyray_rejected_promise_t * skyray_rejected_promise_new(zval *value, zend_bool is_copy_required);
 

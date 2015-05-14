@@ -23,19 +23,6 @@ zend_object * skyray_rejected_promise_object_new(zend_class_entry *ce)
     return &intern->std;
 }
 
-void skyray_rejected_promise_object_free(zend_object *object)
-{
-    skyray_rejected_promise_t *intern = skyray_rejected_promise_from_obj(object);
-
-    zend_llist_destroy(&intern->on_fulfilled);
-    zend_llist_destroy(&intern->on_rejcted);
-    zend_llist_destroy(&intern->on_notify);
-
-    zval_ptr_dtor(&intern->result);
-
-    zend_object_std_dtor(&intern->std);
-}
-
 skyray_rejected_promise_t * skyray_rejected_promise_new(zval *value, zend_bool is_copy_required)
 {
     zval tmp;
@@ -167,12 +154,12 @@ SKYRAY_MINIT_FUNCTION(rejected_promise)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\defer\\RejectedPromise", class_methods);
-    skyray_ce_RejectedPromise = zend_register_internal_class(&ce);
+    skyray_ce_RejectedPromise = zend_register_internal_class_ex(&ce, skyray_ce_Promise);
     skyray_ce_RejectedPromise->create_object = skyray_rejected_promise_object_new;
 
     memcpy(&skyray_handler_RejectedPromise, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     skyray_handler_RejectedPromise.offset = XtOffsetOf(skyray_rejected_promise_t, std);
-    skyray_handler_RejectedPromise.free_obj = skyray_rejected_promise_object_free;
+    skyray_handler_RejectedPromise.free_obj = skyray_promise_object_free;
 
     return SUCCESS;
 }
