@@ -13,8 +13,18 @@ namespace skyray\defer;
  * @package skyray\defer
  * @since 0.1
  */
-class RejectedPromise
+class RejectedPromise extends Promise
 {
+    /**
+     * Constructor
+     *
+     * @param mixed $reason The reason of the rejected promise.
+     */
+    public function __construct($reason)
+    {
+
+    }
+
     /**
      * @param callable $onFulfilled
      * @param callable $onRejected

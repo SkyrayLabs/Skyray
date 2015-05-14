@@ -13,8 +13,18 @@ namespace skyray\defer;
  * @package skyray\defer
  * @since 0.1
  */
-class FulfilledPromise
+class FulfilledPromise extends Promise
 {
+    /**
+     * Constructor
+     *
+     * @param mixed $value The value of the fulfilled promise.
+     */
+    public function __construct($value)
+    {
+
+    }
+
     /**
      * @param callable $onFulfilled
      * @param callable $onRejected

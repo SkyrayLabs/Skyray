@@ -11,7 +11,7 @@ namespace skyray\defer;
  * @method finally() see _finally()
  * @method catch() see _catch()
  */
-class Promise
+class Promise implements PromiseInterface
 {
     /**
      * @param callable $onFulfilled
