@@ -8,6 +8,7 @@
 #include "defer.h"
 
 zend_class_entry *skyray_ce_Promise;
+zend_class_entry *skyray_ce_PromiseInterface;
 
 zend_object_handlers skyray_handler_Promise;
 
@@ -358,7 +359,11 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_reject, 0, 0, 1)
     ZEND_ARG_INFO(0, reason)
 ZEND_END_ARG_INFO()
 
-
+static const zend_function_entry iface_methods[] = {
+    SKYRAY_ME(promise, then, arginfo_then_or_done, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
+    SKYRAY_ME(promise, done, arginfo_then_or_done, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
+    PHP_FE_END
+};
 
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(promise, __construct, arginfo___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
@@ -372,9 +377,15 @@ static const zend_function_entry class_methods[] = {
 SKYRAY_MINIT_FUNCTION(promise)
 {
     zend_class_entry ce;
+
+    INIT_CLASS_ENTRY(ce, "skyray\\defer\\PromiseInterface", iface_methods);
+    skyray_ce_PromiseInterface = zend_register_internal_interface(&ce);
+
     INIT_CLASS_ENTRY(ce, "skyray\\defer\\Promise", class_methods);
     skyray_ce_Promise = zend_register_internal_class(&ce);
     skyray_ce_Promise->create_object = skyray_promise_object_new;
+
+    zend_class_implements(skyray_ce_Promise, 1, skyray_ce_PromiseInterface);
 
     memcpy(&skyray_handler_Promise, zend_get_std_object_handlers(), sizeof(zend_object_handlers));
     skyray_handler_Promise.offset = XtOffsetOf(skyray_promise_t, std);
