@@ -75,7 +75,12 @@ skyray_promise_t * skyray_rejected_promise_then(skyray_rejected_promise_t *self,
 
 void skyray_rejected_promise_done(skyray_rejected_promise_t *self, zval *on_rejected)
 {
-    if (on_rejected == NULL && !zend_is_callable(on_rejected, 0, NULL)) {
+    if (on_rejected == NULL || !zend_is_callable(on_rejected, 0, NULL)) {
+        assert(Z_TYPE(self->result) == IS_OBJECT
+                && instanceof_function(Z_OBJCE(self->result), zend_exception_get_base()));
+
+        EG(exception) = Z_OBJ_P(&self->result);
+        zval_addref_p(&self->result);
         return;
     }
 
