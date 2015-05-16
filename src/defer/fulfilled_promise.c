@@ -68,7 +68,7 @@ skyray_promise_t * skyray_fulfilled_promise_then(skyray_fulfilled_promise_t *sel
 
 void skyray_fulfilled_promise_done(skyray_fulfilled_promise_t *self, zval *on_fulfilled)
 {
-    if (on_fulfilled == NULL && !zend_is_callable(on_fulfilled, 0, NULL)) {
+    if (on_fulfilled == NULL || !zend_is_callable(on_fulfilled, 0, NULL)) {
         return;
     }
 
