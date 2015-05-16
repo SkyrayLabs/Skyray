@@ -7,9 +7,6 @@ namespace skyray\defer;
  *
  * @package skyray\defer
  * @since 0.1
- *
- * @method finally() see _finally()
- * @method catch() see _catch()
  */
 class Promise implements PromiseInterface
 {
@@ -34,12 +31,12 @@ class Promise implements PromiseInterface
 
     }
 
-    public function _catch($errorHandler = null)
+    public function catch($errorHandler = null)
     {
 
     }
 
-    public function _finally($handler = null, $notifyHandler = null)
+    public function finally($handler = null, $notifyHandler = null)
     {
 
     }

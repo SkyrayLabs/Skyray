@@ -136,22 +136,63 @@ SKYRAY_METHOD(rejected_promise, done)
     skyray_rejected_promise_done(intern, on_rejected);
 }
 
+SKYRAY_METHOD(rejected_promise, catch)
+{
+    zval *on_rejected = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &on_rejected) == FAILURE) {
+        return;
+    }
+
+    skyray_rejected_promise_t *intern = skyray_rejected_promise_from_obj(Z_OBJ_P(getThis()));
+
+    skyray_promise_t *promise = skyray_rejected_promise_then(intern, on_rejected);
+
+    if (promise != NULL) {
+        RETURN_OBJ(&promise->std);
+    } else {
+        RETURN_ZVAL(getThis(), 1, 0);
+    }
+}
+
+SKYRAY_METHOD(rejected_promise, finally)
+{
+    zval *handler = NULL, *on_progress = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|zz", &handler, &on_progress) == FAILURE) {
+        return;
+    }
+
+    skyray_rejected_promise_t *intern = skyray_rejected_promise_from_obj(Z_OBJ_P(getThis()));
+
+    skyray_rejected_promise_done(intern, handler);
+}
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_then_or_done, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_then_or_done, 0, 0, 0)
     ZEND_ARG_INFO(0, rejectedHandler)
     ZEND_ARG_INFO(0, errorHandler)
     ZEND_ARG_INFO(0, notifyHandler)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO_EX(arginfo_catch, 0, 0, 0)
+    ZEND_ARG_INFO(0, errorHandler)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_finally, 0, 0, 0)
+    ZEND_ARG_INFO(0, handler)
+    ZEND_ARG_INFO(0, notifyHandler)
+ZEND_END_ARG_INFO()
 
 
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(rejected_promise, __construct, arginfo___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(rejected_promise, then, arginfo_then_or_done, ZEND_ACC_PUBLIC)
     SKYRAY_ME(rejected_promise, done, arginfo_then_or_done, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(rejected_promise, catch, arginfo_catch, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(rejected_promise, finally, arginfo_finally, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 

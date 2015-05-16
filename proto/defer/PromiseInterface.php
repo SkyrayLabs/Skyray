@@ -29,4 +29,25 @@ interface PromiseInterface
      * @param callable $onProgress
      */
     public function done($onFulfilled = null, $onRejected = null, $onProgress = null);
+
+    /**
+     * @param callable $onRejected
+     *
+     * @return mixed
+     */
+    public function catch($onRejected = null)
+    {
+
+    }
+
+    /**
+     * @param callable $handler
+     * @param callable $onProgress
+     *
+     * @return mixed
+     */
+    public function finally($handler = null, $onProgress = null)
+    {
+
+    }
 }

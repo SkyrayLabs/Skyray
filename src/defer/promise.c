@@ -246,6 +246,7 @@ void skyray_promise_done(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
 
         call_user_function(NULL, result, &function_name, &retval, 2, params);
 
+
         zval_ptr_dtor(&retval);
     } else {
         promise_resolve_context_t *context;
@@ -286,8 +287,6 @@ void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is
     } else {
         ZVAL_COPY(&self->result, result);
     }
-
-
 
     if (skyray_is_resolved_promise(result)) {
         call_resolved_handlers(self, &self->on_fulfilled, &self->on_rejcted);
@@ -347,6 +346,30 @@ SKYRAY_METHOD(promise, done)
     skyray_promise_done(intern, on_fulfilled, on_rejected);
 }
 
+SKYRAY_METHOD(promise, catch)
+{
+    zval *on_rejected = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &on_rejected) == FAILURE) {
+        return;
+    }
+
+    skyray_promise_t *intern = skyray_promise_from_obj(Z_OBJ_P(getThis()));
+    skyray_promise_then(intern, NULL, on_rejected, return_value);
+}
+
+SKYRAY_METHOD(promise, finally)
+{
+    zval *handler = NULL;
+
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "|z", &handler) == FAILURE) {
+        return;
+    }
+
+    skyray_promise_t *intern = skyray_promise_from_obj(Z_OBJ_P(getThis()));
+    skyray_promise_done(intern, handler, handler);
+}
+
 SKYRAY_METHOD(promise, resolve)
 {
     zval *value;
@@ -375,9 +398,18 @@ SKYRAY_METHOD(promise, reject)
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_then_or_done, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_then_or_done, 0, 0, 0)
     ZEND_ARG_INFO(0, fulfilledHandler)
     ZEND_ARG_INFO(0, errorHandler)
+    ZEND_ARG_INFO(0, notifyHandler)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_catch, 0, 0, 0)
+    ZEND_ARG_INFO(0, errorHandler)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO_EX(arginfo_finally, 0, 0, 0)
+    ZEND_ARG_INFO(0, handler)
     ZEND_ARG_INFO(0, notifyHandler)
 ZEND_END_ARG_INFO()
 
@@ -393,6 +425,8 @@ ZEND_END_ARG_INFO()
 static const zend_function_entry iface_methods[] = {
     SKYRAY_ME(promise, then, arginfo_then_or_done, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
     SKYRAY_ME(promise, done, arginfo_then_or_done, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
+    SKYRAY_ME(promise, catch, arginfo_catch, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
+    SKYRAY_ME(promise, finally, arginfo_finally, ZEND_ACC_PUBLIC | ZEND_ACC_ABSTRACT)
     PHP_FE_END
 };
 
@@ -400,6 +434,8 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(promise, __construct, arginfo___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
     SKYRAY_ME(promise, then, arginfo_then_or_done, ZEND_ACC_PUBLIC)
     SKYRAY_ME(promise, done, arginfo_then_or_done, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(promise, catch, arginfo_catch, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(promise, finally, arginfo_finally, ZEND_ACC_PUBLIC)
     SKYRAY_ME(promise, resolve, arginfo_resolve, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     SKYRAY_ME(promise, reject, arginfo_reject, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_FE_END
