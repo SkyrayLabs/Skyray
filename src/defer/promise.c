@@ -121,7 +121,7 @@ void skyray_promise_object_init(skyray_promise_t *self, zend_class_entry *ce)
     zend_object_std_init(&self->std, ce);
     object_properties_init(&self->std, ce);
 
-    ZVAL_NULL(&self->result);
+    ZVAL_UNDEF(&self->result);
 
     zend_hash_init(&self->on_fulfilled, 8, NULL, promise_resolve_context_free, 0);
     zend_hash_init(&self->on_rejcted, 8, NULL, promise_resolve_context_free, 0);
@@ -143,8 +143,12 @@ void skyray_promise_object_free(zend_object *object)
 {
     skyray_promise_t *intern = skyray_promise_from_obj(object);
 
-    //zend_hash_destroy(&intern->on_fulfilled);
-    //zend_hash_destroy(&intern->on_rejcted);
+    // The promise is still pending
+    if (Z_TYPE(intern->result) == IS_UNDEF) {
+        zend_hash_destroy(&intern->on_fulfilled);
+        zend_hash_destroy(&intern->on_rejcted);
+    }
+
     zend_hash_destroy(&intern->on_notify);
 
     zval_ptr_dtor(&intern->result);
@@ -159,7 +163,7 @@ zval* skyray_promise_unwrap_zval(zval *promise)
 
     while (!skyray_is_resolved_promise(promise)) {
         tmp = skyray_promise_from_obj(Z_OBJ_P(retval));
-        if (ZVAL_IS_NULL(&tmp->result)) {
+        if (Z_TYPE(tmp->result) == IS_UNDEF) {
             break;
         }
         retval = &tmp->result;
@@ -185,7 +189,7 @@ void skyray_promise_then(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
 {
     zval *result, params[2], function_name;
 
-    if (!ZVAL_IS_NULL(&self->result)) {
+    if (Z_TYPE(self->result) != IS_UNDEF) {
         result = skyray_promise_unwrap(self);
 
         ZVAL_NULL(&params[0]);
@@ -229,7 +233,7 @@ void skyray_promise_done(skyray_promise_t *self, zval *on_fulfilled, zval *on_re
 {
     zval *result, params[2], function_name, retval;
 
-    if (!ZVAL_IS_NULL(&self->result)) {
+    if (Z_TYPE(self->result) != IS_UNDEF) {
         result = skyray_promise_unwrap(self);
 
         ZVAL_NULL(&params[0]);
@@ -269,7 +273,7 @@ void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is
 {
     zval *result, tmp;
 
-    if (!ZVAL_IS_NULL(&self->result)) {
+    if (Z_TYPE(self->result) != IS_UNDEF) {
         return;
     }
 
@@ -302,7 +306,7 @@ void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is
 
 void skyray_promise_do_reject(skyray_promise_t *self, zval *reason, zend_bool is_copy_required)
 {
-    if (!ZVAL_IS_NULL(&self->result)) {
+    if (Z_TYPE(self->result) != IS_UNDEF) {
         return;
     }
 
