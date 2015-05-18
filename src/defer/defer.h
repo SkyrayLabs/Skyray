@@ -81,6 +81,8 @@ void skyray_promise_object_free(zend_object *object);
 
 skyray_fulfilled_promise_t * skyray_fulfilled_promise_new(zval *value, zend_bool is_copy_required);
 skyray_rejected_promise_t * skyray_rejected_promise_new(zval *value, zend_bool is_copy_required);
+void skyray_promise_do_resolve(skyray_promise_t *self, zval *value, zend_bool is_copy_required);
+void skyray_promise_do_reject(skyray_promise_t *self, zval *reason, zend_bool is_copy_required);
 
 SKYRAY_MINIT_FUNCTION(deferred);
 SKYRAY_MINIT_FUNCTION(promise);
