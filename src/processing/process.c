@@ -45,6 +45,29 @@ static void skyray_process_object_free(zend_object *object)
     }
 }
 
+int call_user_function_array(HashTable *function_table, zval *object, zval *function_name, zval *retval_ptr, zval *params)
+{
+    zend_fcall_info fci;
+    int retval;
+
+    fci.size = sizeof(fci);
+    fci.function_table = EG(function_table);
+    fci.object = NULL;
+    ZVAL_COPY_VALUE(&fci.function_name, function_name);
+    fci.retval = retval_ptr;;
+    fci.no_separation = (zend_bool) 1;
+    fci.symbol_table = NULL;
+    fci.param_count = 0;
+    fci.params = NULL;
+
+    zend_fcall_info_args(&fci, params);
+
+    retval = zend_call_function(&fci, NULL);
+
+    zend_fcall_info_args_clear(&fci, 1);
+
+    return retval;
+}
 
 SKYRAY_METHOD(Process, __construct)
 {
@@ -113,23 +136,12 @@ SKYRAY_METHOD(Process, run)
     skyray_process_t *object = skyray_process_from_obj(Z_OBJ(EX(This)));
     zval retval;
 
-    zend_fcall_info fci;
-
-    fci.size = sizeof(fci);
-    fci.function_table = EG(function_table);
-    fci.object = NULL;
-    ZVAL_COPY_VALUE(&fci.function_name, object->callable);
-    fci.retval = &retval;
-    fci.no_separation = (zend_bool) 1;
-    fci.symbol_table = NULL;
-    fci.param_count = 0;
-    fci.params = NULL;
-
     if (object->args) {
-        zend_fcall_info_args(&fci, object->args TSRMLS_CC);
+        call_user_function_array(EG(function_table), NULL, object->callable, &retval, object->args);
+    } else {
+        call_user_function(EG(function_table), NULL, object->callable, &retval, 0, NULL);
     }
 
-    zend_call_function(&fci, NULL);
     if (EG(exception)) {
         exit(101);
     } else {
