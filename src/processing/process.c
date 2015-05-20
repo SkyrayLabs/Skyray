@@ -36,11 +36,11 @@ static void skyray_process_object_free(zend_object *object)
     skyray_process_t *intern = skyray_process_from_obj(object);
     zend_object_std_dtor(&intern->std);
 
-    zval_dtor(intern->callable);
+    zval_ptr_dtor(intern->callable);
     efree(intern->callable);
 
     if (intern->args) {
-        zval_dtor(intern->args);
+        zval_ptr_dtor(intern->args);
         efree(intern->args);
     }
 }
