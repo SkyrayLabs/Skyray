@@ -220,15 +220,15 @@ ZEND_END_ARG_INFO()
 
 static const zend_function_entry class_methods[] = {
     SKYRAY_ME(reactor, __construct, arginfo___construct, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, addReader, arginfo_addReader, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, addWriter, arginfo_addWriter, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, removeReader, arginfo_removeReader, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, removeWriter, arginfo_removeWriter, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, addTimer, arginfo_addTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, addPeriodicTimer, arginfo_addTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, run, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
-    SKYRAY_ME(reactor, stop, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_CTOR)
+    SKYRAY_ME(reactor, addReader, arginfo_addReader, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, addWriter, arginfo_addWriter, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, removeReader, arginfo_removeReader, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, removeWriter, arginfo_removeWriter, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, addTimer, arginfo_addTimer, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, addPeriodicTimer, arginfo_addTimer, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, run, arginfo_empty, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, stop, arginfo_empty, ZEND_ACC_PUBLIC)
     PHP_FE_END
 };
 
