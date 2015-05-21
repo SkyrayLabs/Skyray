@@ -11,43 +11,41 @@ namespace skyray\core;
 class Reactor
 {
     /**
-     * Add a reader stream to reactor.
+     * Attach a stream to reactor, the stream will be set as non-blocking and Reactor will process dataReceived and streamClosed events on its protocol.
      *
      * @param \skyray\core\Stream $stream The stream to add
-     * @param callable $callback The callback is only useful when adding streams that without protocol associated.
      */
-    public function addReader($stream, $callback = null)
+    public function attach($stream)
     {
 
     }
 
     /**
-     * Add a writer stream to reactor.
+     * Detach the stream from reactor, no future events will get notified.
      *
      * @param \skyray\core\Stream $stream The stream to add
-     * @param callable $callback The callback is only useful when adding streams that without protocol associated.
      */
-    public function addWriter($stream, $callback = null)
+    public function detach($stream)
     {
 
     }
 
     /**
-     * Remove the specified reader stream from reactor.
+     * Add a raw file descriptor to reactor for monitoring readable and writable events.
      *
      * @param $stream
      */
-    public function removeReader($stream)
+    public function watch($fd, $onReadable = null, $onWriteable = null)
     {
 
     }
 
     /**
-     * Remove the specified writer stream from reactor.
+     * Remove raw file descriptor from reactor.
      *
      * @param $stream
      */
-    public function removeWriter($stream)
+    public function unwatch($fd)
     {
 
     }
