@@ -43,6 +43,9 @@ class TestWorker2 {
         throw new \RuntimeException('i am an exception');
     }
 }
+set_exception_handler(function ($e) {
+    print '[process]: ' . $e->getMessage() . PHP_EOL;
+});
 $worker = new TestWorker2();
 $process = new Process([$worker, 'run']);
 $process->start();
@@ -60,5 +63,6 @@ Process id: %d
 it works foo bar
 Process exited with: 100
 ==== test throw exception ====
+[process]: i am an exception
 Process exited with: 101
 done

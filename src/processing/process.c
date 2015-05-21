@@ -143,6 +143,7 @@ SKYRAY_METHOD(Process, run)
     }
 
     if (EG(exception)) {
+        skyray_handle_uncaught_exception(EG(exception), 0);
         exit(101);
     } else {
         convert_to_long(&retval);
