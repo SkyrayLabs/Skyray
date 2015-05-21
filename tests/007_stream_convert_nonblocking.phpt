@@ -45,7 +45,7 @@ $client = new StreamClient(null);
 $stream = $client->connectTCP('127.0.0.1', 2333);
 $stream->setProtocol(new MyProtocol());
 echo get_class($stream->getProtocol()) . PHP_EOL;
-$reactor->addReader($stream);
+$reactor->attach($stream);
 $reactor->run();
 ?>
 --EXPECTF--

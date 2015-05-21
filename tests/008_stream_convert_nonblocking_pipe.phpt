@@ -40,7 +40,7 @@ $streams = $client->createPipe(true);
 
 $streams[0]->setProtocol(new MyProtocol());
 
-$reactor->addReader($streams[0]);
+$reactor->attach($streams[0]);
 
 $streams[1]->write("hello world");
 $streams[1]->close();
