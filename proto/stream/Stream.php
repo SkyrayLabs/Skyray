@@ -1,12 +1,12 @@
 <?php
 
-namespace skyray\core;
+namespace skyray\stream;
 
 /**
  * Stream represents a connection to a remote or local endpoint/socket. A stream can't be created directly,
  * all streams can only be created via StreamClient.
  *
- * @package skyray\core
+ * @package skyray\stream
  * @since 0.1
  */
 class Stream
@@ -50,7 +50,7 @@ class Stream
     }
 
     /**
-     * Read data from stream, for non-blocking streams, a \skyray\core\SkyrayException will be thrown.
+     * Read data from stream, for non-blocking streams, a \skyray\stream\SkyrayException will be thrown.
      *
      * @return string
      */
@@ -81,7 +81,7 @@ class Stream
     /**
      * Returns the protocol used by the stream.
      *
-     * @return \skyray\core\ProtocolInterface|null
+     * @return ProtocolInterface|null
      */
     public function getProtocol()
     {

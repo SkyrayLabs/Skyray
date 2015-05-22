@@ -5,7 +5,7 @@ namespace skyray\core;
 /**
  * Class Timer
  *
- * @package skyray\core
+ * @package skyray
  * @since 0.1
  */
 class Timer

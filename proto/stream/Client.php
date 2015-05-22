@@ -1,6 +1,9 @@
 <?php
 
-namespace skyray\core;
+namespace skyray\stream;
+
+use skyray\protocol\HttpProtocol;
+use skyray\protocol\ProtocolInterface;
 
 /**
  * StreamClient
@@ -21,29 +24,43 @@ namespace skyray\core;
  *
  * How reconnecting should be implemented???
  *
- * @package skyray\core
+ * @package skyray\stream
  * @since 0.0.1
  */
 class StreamClient {
 
-    protected $factory;
+    protected $protocolCreator;
     protected $reactor;
 
-    public function __construct($factory, $reactor = null)
+    public function __construct($protocolCreator, $reactor = null)
     {
-        $this->factory = $factory;
+        $this->protocolCreator = $protocolCreator;
         $this->reactor = $reactor;
+    }
+
+    protected function makeConnection()
+    {
+
     }
 
     /**
      * @param $host
      * @param $port
-     * @return Stream|Deferred
+     * @return ProtocolInterface|Deferred|Stream
      */
     public function connectTCP($host, $port)
     {
-        $protocol = $this->factory->createProtocol();
-        return new Stream($protocol, $this->reactor);
+        $creator = $this->protocolCreator;
+        /** @var ProtocolInterface $protocol */
+        $protocol = $creator();
+
+        $stream = $this->makeConnection();
+        $protocol->streamConnected($stream);
+        while($data = $stream->read()) {
+            $protocol->dataReceived($data);
+        }
+        $protocol->streamClosed();
+        return $protocol;
     }
 
 

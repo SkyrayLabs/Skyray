@@ -1,11 +1,11 @@
 <?php
 
-namespace skyray\core;
+namespace skyray;
 
 /**
  * Class Reactor
  *
- * @package skyray\core
+ * @package skyray
  * @since 0.1
  */
 class Reactor
@@ -33,19 +33,35 @@ class Reactor
     /**
      * Add a raw file descriptor to reactor for monitoring readable and writable events.
      *
-     * @param $stream
+     * @param $fd
+     * @param FdWatcherHandler $handler
+     * @return Watcher
      */
-    public function watch($fd, $onReadable = null, $onWriteable = null)
+    public function watch($fd, $handler)
     {
 
     }
 
     /**
-     * Remove raw file descriptor from reactor.
+     * Monitoring filesystem changes.
      *
-     * @param $stream
+     * @param string $filename
+     * @param FileEventHandler $handler
+     * @return Watcher
      */
-    public function unwatch($fd)
+    public function watchFile($filename, $handler)
+    {
+
+    }
+
+    /**
+     * Monitoring process state changes.
+     *
+     * @param \skyray\processing\Process $process
+     * @param ProcessWatcherHandler $handler
+     * @return Watcher
+     */
+    public function watchProcess($process, $handler)
     {
 
     }

@@ -1,14 +1,14 @@
 <?php
 
-namespace skyray\core;
+namespace skyray\stream;
 
 /**
  * Interface ProtocolInterface
  *
- * @package skyray\protocol
+ * @package skyray\stream
  * @since 0.1
  */
-interface StreamProtocolInterface
+interface ProtocolInterface
 {
     /**
      * Called when stream created successfully but the connection is not established yet.

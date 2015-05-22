@@ -1,16 +1,16 @@
 <?php
 
-namespace skyray\core;
+namespace skyray\stream;
 
 use skyray\Object;
 
 /**
  * Class StreamServer
  *
- * @property Reactor $reactor The reactor object the server current running on, if the property was absent,
+ * @property \skyray\Reactor $reactor The reactor object the server current running on, if the property was absent,
  * a default reactor will be automatically created.
  *
- * @package skyray\core
+ * @package skyray\stream
  * @since 0.1
  */
 class StreamServer extends Object
@@ -19,7 +19,7 @@ class StreamServer extends Object
      * Constructor
      *
      * @param callable $factory Factory function to create protocol for streams, the returned object of this callable
-     * should be instance of \skyray\core\ProtocolInterface.
+     * should be instance of \skyray\stream\ProtocolInterface.
      * @param array $config The configuration to initialize the object.
      * @throws \skyray\InvalidParamException if $factory is not a valid callable.
      */
@@ -31,7 +31,7 @@ class StreamServer extends Object
     /**
      * Returns the reactor object used by the server,
      *
-     * @return \skyray\core\Reactor
+     * @return \skyray\Reactor
      */
     public function getReactor()
     {
@@ -41,7 +41,7 @@ class StreamServer extends Object
     /**
      * Sets the reactor object used by the server
      *
-     * @param \skyray\core\Reactor $reactor
+     * @param \skyray\Reactor $reactor
      */
     public function setReactor($reactor)
     {
@@ -64,7 +64,7 @@ class StreamServer extends Object
      * @param $host
      * @param $port
      * @param int $backlog
-     * @throws \skyray\core\SkyrayException throws if the server can not be started.
+     * @throws \skyray\SkyrayException throws if the server can not be started.
      */
     public function listen($host, $port, $backlog = 10)
     {
