@@ -240,7 +240,7 @@ static const zend_function_entry class_methods[] = {
     PHP_FE_END
 };
 
-PHP_MINIT_FUNCTION(process)
+SKYRAY_MINIT_FUNCTION(process)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\processing\\Process", class_methods);

@@ -105,7 +105,7 @@ static const zend_function_entry class_methods[] = {
     PHP_FE_END
 };
 
-PHP_MINIT_FUNCTION(skyray_http_server)
+SKYRAY_MINIT_FUNCTION(http_server)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\http\\Server", class_methods);

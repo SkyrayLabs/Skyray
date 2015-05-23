@@ -29,6 +29,6 @@ typedef struct _skyray_process {
     zend_object std;
 }skyray_process_t;
 
-PHP_MINIT_FUNCTION(process);
+SKYRAY_MINIT_FUNCTION(process);
 
 #endif /* PROCESS_H_ */

@@ -182,11 +182,11 @@ static inline skyray_http_server_t *skyray_http_server_from_obj(zend_object *obj
 void skyray_http_message_init(skyray_http_message_t *self, zend_class_entry *ce);
 zval* skyray_http_message_get_header(skyray_http_message_t *self, zend_string *name, zend_bool first);
 
-PHP_MINIT_FUNCTION(skyray_http_message);
-PHP_MINIT_FUNCTION(skyray_http_request);
-PHP_MINIT_FUNCTION(skyray_http_response);
-PHP_MINIT_FUNCTION(skyray_http_protocol);
-PHP_MINIT_FUNCTION(skyray_http_server);
+SKYRAY_MINIT_FUNCTION(http_message);
+SKYRAY_MINIT_FUNCTION(http_request);
+SKYRAY_MINIT_FUNCTION(http_response);
+SKYRAY_MINIT_FUNCTION(http_protocol);
+SKYRAY_MINIT_FUNCTION(http_server);
 
 
 #endif /* SRC_HTTP_HTTP_H_ */

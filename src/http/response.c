@@ -98,7 +98,7 @@ static const zend_function_entry class_methods[] = {
     PHP_FE_END
 };
 
-PHP_MINIT_FUNCTION(skyray_http_response)
+SKYRAY_MINIT_FUNCTION(http_response)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\http\\Response", class_methods);

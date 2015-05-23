@@ -42,7 +42,7 @@ zend_bool skyray_stream_close(skyray_stream_t *self);
 void skyray_stream_read_start(skyray_stream_t *self);
 void skyray_stream_read_stop(skyray_stream_t *self);
 
-PHP_MINIT_FUNCTION(stream);
+SKYRAY_MINIT_FUNCTION(stream);
 
 
 #endif /* SRC_STREAM_STREAM_H_ */

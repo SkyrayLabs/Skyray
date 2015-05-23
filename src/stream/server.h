@@ -25,7 +25,7 @@ typedef struct _skyray_stream_server {
 
 void skyray_stream_server_object_init(skyray_stream_server_t *self, zend_class_entry *ce);
 void skyray_stream_server_object_free(zend_object *object);
-PHP_MINIT_FUNCTION(stream_server);
+SKYRAY_MINIT_FUNCTION(stream_server);
 
 
 #endif /* SRC_STREAM_SERVER_H_ */

@@ -585,7 +585,7 @@ static const zend_function_entry class_methods[] = {
     PHP_FE_END
 };
 
-PHP_MINIT_FUNCTION(stream)
+SKYRAY_MINIT_FUNCTION(stream)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\stream\\Stream", class_methods);

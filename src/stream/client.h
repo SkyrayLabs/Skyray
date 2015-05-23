@@ -19,7 +19,7 @@ typedef struct _skyray_stream_client {
     zend_object std;
 }skyray_stream_client_t;
 
-PHP_MINIT_FUNCTION(stream_client);
+SKYRAY_MINIT_FUNCTION(stream_client);
 
 
 #endif /* SRC_CORE_STREAM_CLIENT_H_ */
