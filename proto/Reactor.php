@@ -2,6 +2,8 @@
 
 namespace skyray;
 
+use skyray\stream\FdWatcher;
+
 /**
  * Class Reactor
  *
@@ -13,7 +15,7 @@ class Reactor
     /**
      * Attach a stream to reactor, the stream will be set as non-blocking and Reactor will process dataReceived and streamClosed events on its protocol.
      *
-     * @param \skyray\core\Stream $stream The stream to add
+     * @param \skyray\stream\Stream $stream The stream to add
      */
     public function attach($stream)
     {
@@ -23,7 +25,7 @@ class Reactor
     /**
      * Detach the stream from reactor, no future events will get notified.
      *
-     * @param \skyray\core\Stream $stream The stream to add
+     * @param \skyray\stream\Stream $stream The stream to add
      */
     public function detach($stream)
     {
@@ -33,11 +35,13 @@ class Reactor
     /**
      * Add a raw file descriptor to reactor for monitoring readable and writable events.
      *
-     * @param $fd
-     * @param FdWatcherHandler $handler
-     * @return Watcher
+     * @param mixed $fd The fd the watch, integer file descriptor or php socket resources.
+     * @param \skyray\stream\FdWatcherHandler $handler
+     * @param int $events The interested events to watch, must be combination of FdWatcher::READABLE and
+     * FdWatcher::WRITABLE.
+     * @return \skyray\stream\FdWatcher
      */
-    public function watch($fd, $handler)
+    public function watch($fd, $handler, $events = FdWatcher::READABLE | FdWatcher::WRITABLE)
     {
 
     }
@@ -46,8 +50,8 @@ class Reactor
      * Monitoring filesystem changes.
      *
      * @param string $filename
-     * @param FileEventHandler $handler
-     * @return Watcher
+     * @param \skyray\fs\FileEventHandler $handler
+     * @return \skyray\fs\FileWatcher
      */
     public function watchFile($filename, $handler)
     {
@@ -58,7 +62,7 @@ class Reactor
      * Monitoring process state changes.
      *
      * @param \skyray\processing\Process $process
-     * @param ProcessWatcherHandler $handler
+     * @param \skyray\processing\ProcessWatcherHandler $handler
      * @return Watcher
      */
     public function watchProcess($process, $handler)

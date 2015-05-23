@@ -19,16 +19,23 @@ abstract class FdWatcherHandler
 
     /**
      * Handler that will be called when watched file descriptor becomes readable.
+     *
+     * @param mixed $fd
      */
-    abstract public function onReadable();
+    abstract public function onReadable($fd);
 
     /**
      * Handler that will be called when watched file descriptor becomes writable.
+     *
+     * @param mixed $fd
      */
-    abstract public function onWritable();
+    abstract public function onWritable($fd);
 
     /**
      * Handler that will be called when error occurs on watched file descriptor.
+     *
+     * @param mixed $fd
+     * @param string $error
      */
-    abstract public function onError();
+    abstract public function onError($fd, $error);
 }
