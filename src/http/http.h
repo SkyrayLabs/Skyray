@@ -10,7 +10,7 @@
 
 
 #include "src/skyray.h"
-#include "src/core/stream_server.h"
+#include "src/stream/server.h"
 #include "deps/http-parser/http_parser.h"
 
 extern zend_class_entry *skyray_ce_HttpMessage;

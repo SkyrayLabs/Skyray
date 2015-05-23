@@ -27,7 +27,7 @@ use skyray\protocol\ProtocolInterface;
  * @package skyray\stream
  * @since 0.0.1
  */
-class StreamClient {
+class Client {
 
     protected $protocolCreator;
     protected $reactor;

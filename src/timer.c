@@ -139,7 +139,7 @@ static const zend_function_entry class_methods[] = {
 PHP_MINIT_FUNCTION(skyray_timer)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\Timer", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\Timer", class_methods);
     skyray_ce_Timer = zend_register_internal_class(&ce);
     skyray_ce_Timer->create_object = skyray_timer_object_new;
 

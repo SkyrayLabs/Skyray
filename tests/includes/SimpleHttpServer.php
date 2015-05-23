@@ -1,8 +1,8 @@
 <?php
 
-use skyray\core\Reactor;
-use skyray\core\StreamServer;
-use skyray\core\StreamProtocolInterface;
+use skyray\Reactor;
+use skyray\stream\Server;
+use skyray\stream\ProtocolInterface;
 
 /**
  * A simple http server implementation only relies on StreamServer.
@@ -17,7 +17,7 @@ class SimpleHttpServer
     public function __construct($host, $port)
     {
         $this->reactor = new Reactor();
-        $this->server = new StreamServer([$this, 'createProtocol']);
+        $this->server = new Server([$this, 'createProtocol']);
         $this->server->listen($host, $port);
     }
 
@@ -32,7 +32,7 @@ class SimpleHttpServer
     }
 }
 
-class FakeHttpProtocol implements StreamProtocolInterface
+class FakeHttpProtocol implements ProtocolInterface
 {
     protected $stream;
 

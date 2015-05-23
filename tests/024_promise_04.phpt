@@ -5,7 +5,7 @@ Test for skyray\defer\Promise uncaught exception
 --FILE--
 <?php
 use skyray\defer\Promise;
-use skyray\core\Reactor;
+use skyray\Reactor;
 
 $reactor = new Reactor();
 

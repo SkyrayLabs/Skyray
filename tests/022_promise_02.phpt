@@ -5,7 +5,7 @@ Test for skyray\defer\Deferred resolve
 --FILE--
 <?php
 use skyray\defer\Deferred;
-use skyray\core\Reactor;
+use skyray\Reactor;
 
 $reactor = new Reactor();
 

@@ -1,7 +1,7 @@
 #include "skyray.h"
 
-#include "core/reactor.h"
-#include "core/stream.h"
+#include "reactor.h"
+#include "stream/stream.h"
 #include "processing/process.h"
 
 zend_class_entry * skyray_ce_BaseException;
@@ -36,7 +36,7 @@ void skyray_handle_uncaught_exception(zend_object *old_exception, zend_bool halt
         has_error = 1;
     }
 
-    if (has_error && halt) {
+    if (has_error) {
         zend_exception_error(old_exception, E_ERROR);
     }
 }
@@ -63,7 +63,7 @@ PHP_MINIT_FUNCTION(skyray_interfaces)
     };
 
 
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\StreamProtocolInterface", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\stream\\ProtocolInterface", class_methods);
     skyray_ce_ProtocolInterface = zend_register_internal_interface(&ce);
 
     return SUCCESS;

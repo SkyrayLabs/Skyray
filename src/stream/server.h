@@ -5,12 +5,12 @@
  *      Author: hujin
  */
 
-#ifndef SRC_CORE_STREAM_SERVER_H_
-#define SRC_CORE_STREAM_SERVER_H_
+#ifndef SRC_STREAM_SERVER_H_
+#define SRC_STREAM_SERVER_H_
 
 
 #include "src/skyray.h"
-#include "reactor.h"
+#include "src/reactor.h"
 
 extern zend_class_entry *skyray_ce_StreamServer;
 
@@ -28,4 +28,4 @@ void skyray_stream_server_object_free(zend_object *object);
 PHP_MINIT_FUNCTION(stream_server);
 
 
-#endif /* SRC_CORE_STREAM_SERVER_H_ */
+#endif /* SRC_STREAM_SERVER_H_ */

@@ -5,8 +5,8 @@
  *      Author: hujin
  */
 
-#ifndef SRC_CORE_STREAM_H_
-#define SRC_CORE_STREAM_H_
+#ifndef SRC_STREAM_STREAM_H_
+#define SRC_STREAM_STREAM_H_
 
 
 #include "src/skyray.h"
@@ -45,4 +45,4 @@ void skyray_stream_read_stop(skyray_stream_t *self);
 PHP_MINIT_FUNCTION(stream);
 
 
-#endif /* SRC_CORE_STREAM_H_ */
+#endif /* SRC_STREAM_STREAM_H_ */

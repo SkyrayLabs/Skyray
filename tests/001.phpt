@@ -1,5 +1,5 @@
 --TEST--
-Test for basic process management
+Test for skyray\processing\Process basic process management
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--

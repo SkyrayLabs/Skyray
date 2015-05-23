@@ -1,10 +1,10 @@
 --TEST--
-Test for Reactor() timer support
+Test for skyray\Reactor() timer support
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\Reactor;
+use skyray\Reactor;
 
 $reactor = new Reactor();
 $reactor->addTimer(10, function ($timer) {
@@ -25,7 +25,7 @@ $reactor->run();
 ?>
 --EXPECTF--
 timer1
-skyray\core\Timer
+skyray\Timer
 timer2
 timer2
 timer2

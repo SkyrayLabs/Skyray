@@ -1,13 +1,13 @@
 --TEST--
-Test for StreamClient::createPipe()
+Test for skyray\stream\Client::createPipe()
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\StreamClient;
+use skyray\stream\Client;
 use skyray\BaseException;
 
-$client = new StreamClient(null);
+$client = new Client(null);
 $streams = $client->createPipe(false);
 
 try {

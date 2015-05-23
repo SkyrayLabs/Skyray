@@ -13,7 +13,7 @@ use skyray\Object;
  * @package skyray\stream
  * @since 0.1
  */
-class StreamServer extends Object
+class Server extends Object
 {
     /**
      * Constructor

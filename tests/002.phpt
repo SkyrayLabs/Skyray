@@ -1,17 +1,17 @@
 --TEST--
-Test for Stream::getPeerName() & Stream::getSockName()
+Test for skyray\stream\Stream::getPeerName() & Stream::getSockName()
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\StreamClient;
+use skyray\stream\Client;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 register_shutdown_function(function () use ($server) {
     $server->stop();
 });
 
-$client = new StreamClient(null);
+$client = new Client(null);
 $stream = $client->connectTCP('127.0.0.1', 2333);
 echo 'peer name:' . PHP_EOL;
 var_dump($stream->getPeerName());

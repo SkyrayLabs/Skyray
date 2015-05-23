@@ -3,7 +3,7 @@
 Skyray provides non-blocking I/O and multi-processing facilities for PHP, it is intended 
 be to as flexible as possible to suit for various applications.
 
-[![](https://travis-ci.org/SkyrayLabs/Skyray.png?branch=master)](https://travis-ci.org/bixuehujin/skyray)
+[![](https://travis-ci.org/SkyrayLabs/Skyray.png?branch=master)](https://travis-ci.org/SkyrayLabs/Skyray)
 
 ## Features
 
@@ -18,7 +18,7 @@ be to as flexible as possible to suit for various applications.
 
 
 ```bash
-git clone https://github.com/bixuehujin/skyray.git --recursive
+git clone https://github.com/SkyrayLabs/Skyray.git --recursive
 phpize
 ./configure --with-php-config=/path/to/php-config
 make & make install
@@ -34,9 +34,9 @@ make & make install
 server.php
 
 ```php
-use skyray\core\Reactor;
-use skyray\core\StreamServer;
-use skyray\core\ProtocolInterface;
+use skyray\Reactor;
+use skyray\stream\Server;
+use skyray\stream\ProtocolInterface;
 
 class SimpleEchoProtocol implements ProtocolInterface
 {
@@ -78,7 +78,7 @@ class SimpleEchoProtocol implements ProtocolInterface
 
 $reactor = new Reactor();
 
-$server = new StreamServer(function () {
+$server = new Server(function () {
     return new SimpleEchoProtocol(true);
 }, $reactor);
 
@@ -90,9 +90,9 @@ $reactor->run();
 client.php
 
 ```php
-use skyray\core\StreamClient;
+use skyray\stream\Client;
 
-$client = new StreamClient();
+$client = new Client();
 $stream = $client->connectTCP('127.0.0.1', 10000);
 $stream->write('hello world');
 var_dump($stream->read());

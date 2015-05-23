@@ -1,19 +1,19 @@
 --TEST--
-Test for Stream() connvert to non-blocking
+Test for skyray\stream\Stream() connvert to non-blocking
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\Reactor;
-use skyray\core\StreamClient;
-use skyray\core\StreamProtocolInterface;
+use skyray\Reactor;
+use skyray\stream\Client;
+use skyray\stream\ProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 register_shutdown_function(function () use ($server) {
     $server->stop();
 });
 
-class MyProtocol implements StreamProtocolInterface
+class MyProtocol implements ProtocolInterface
 {
     public function connectStream($stream)
     {
@@ -40,7 +40,7 @@ class MyProtocol implements StreamProtocolInterface
 
 $reactor = new Reactor();
 
-$client = new StreamClient(null);
+$client = new Client(null);
 
 $stream = $client->connectTCP('127.0.0.1', 2333);
 $stream->setProtocol(new MyProtocol());

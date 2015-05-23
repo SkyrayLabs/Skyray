@@ -1,12 +1,12 @@
 --TEST--
-Test for StreamClient::connectTCP() non-blocking mode
+Test for skyray\stream\Client::connectTCP() non-blocking mode
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\Reactor;
-use skyray\core\StreamClient;
-use skyray\core\StreamProtocolInterface;
+use skyray\Reactor;
+use skyray\stream\Client;
+use skyray\stream\ProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 register_shutdown_function(function () use ($server) {
@@ -17,7 +17,7 @@ set_exception_handler(function ($e) {
     echo '[error]: ' . $e->getMessage();
 });
 
-class MyProtocol implements StreamProtocolInterface
+class MyProtocol implements ProtocolInterface
 {
     protected $stream;
     protected $data = '';
@@ -58,7 +58,7 @@ class MyProtocol implements StreamProtocolInterface
 
 $reactor = new Reactor();
 
-$client = new StreamClient(function () {
+$client = new Client(function () {
     return new MyProtocol();
 }, $reactor);
 
@@ -71,7 +71,7 @@ echo "====================\n";
 
 $reactor = new Reactor();
 
-$client = new StreamClient(function () {
+$client = new Client(function () {
     return new MyProtocol(true);
 }, $reactor);
 
@@ -85,12 +85,12 @@ $reactor->addTimer(200, function () {
 $reactor->run();
 ?>
 --EXPECTF--
-skyray\core\Stream
+skyray\stream\Stream
 string(9) "connected"
 HTTP/1.1 404 Not Found
 closed
 ====================
-skyray\core\Stream
+skyray\stream\Stream
 string(9) "connected"
 [error]: Unable to write to stream, the stream may already closed
 closed

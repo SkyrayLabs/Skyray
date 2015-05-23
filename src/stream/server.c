@@ -6,7 +6,7 @@
  */
 
 
-#include "stream_server.h"
+#include "server.h"
 #include "stream.h"
 #include "protocol.h"
 
@@ -228,7 +228,7 @@ static const zend_function_entry class_methods[] = {
 PHP_MINIT_FUNCTION(stream_server)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\StreamServer", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\stream\\Server", class_methods);
     skyray_ce_StreamServer = zend_register_internal_class_ex(&ce, skyray_ce_Object);
 
     skyray_ce_StreamServer->create_object = skyray_stream_server_object_new;

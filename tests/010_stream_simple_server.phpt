@@ -1,18 +1,18 @@
 --TEST--
-Test for StreamServer() simple echo server
+Test for skyray\stream\Server() simple echo server
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\Reactor;
-use skyray\core\StreamClient;
-use skyray\core\StreamServer;
+use skyray\Reactor;
+use skyray\stream\Client;
+use skyray\stream\Server;
 
 require_once __DIR__ . '/includes/SimpleEchoProtocol.php';
 
 $reactor = new Reactor();
 
-$server = new StreamServer(function () {
+$server = new Server(function () {
     return new SimpleEchoProtocol(true);
 }, [
     'reactor' => $reactor
@@ -21,7 +21,7 @@ $server = new StreamServer(function () {
 $server->listen('0.0.0.0', 10000);
 
 $reactor->addTimer(100, function () use ($reactor) {
-    $client = new StreamClient(function () {
+    $client = new Client(function () {
         return new SimpleEchoProtocol(true, true);
     }, $reactor);
 

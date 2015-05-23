@@ -1,12 +1,12 @@
 <?php
 
 use skyray\Object;
-use skyray\core\Reactor;
-use skyray\core\StreamClient;
-use skyray\core\StreamProtocolInterface;
+use skyray\Reactor;
+use skyray\stream\Client;
+use skyray\stream\ProtocolInterface;
 
 /**
- * A simple http client implementation only relies on StreamClient.
+ * A simple http client implementation only relies on Stream\Client.
  */
 class SimpleHttpClient
 {
@@ -58,7 +58,7 @@ class SimpleHttpClient
             return new ClientHttpProtocol($data, $this->callback, $this->reactor);
         };
 
-        $client = new StreamClient($factory, $this->reactor);
+        $client = new Client($factory, $this->reactor);
         $client->connectTCP($parts['host'], $parts['port']);
     }
 }
@@ -82,7 +82,7 @@ class SimpleHttpResponse extends Object
     }
 }
 
-class ClientHttpProtocol implements StreamProtocolInterface
+class ClientHttpProtocol implements ProtocolInterface
 {
     protected $stream;
 

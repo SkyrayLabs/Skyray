@@ -5,8 +5,8 @@
  *      Author: hujin
  */
 
-#ifndef SRC_CORE_TIMER_C_
-#define SRC_CORE_TIMER_C_
+#ifndef SRC_TIMER_C_
+#define SRC_TIMER_C_
 
 
 #include "src/skyray.h"
@@ -27,4 +27,4 @@ static inline skyray_timer_t *skyray_timer_from_obj(zend_object *obj) {
 PHP_MINIT_FUNCTION(skyray_timer);
 
 
-#endif /* SRC_CORE_TIMER_C_ */
+#endif /* SRC_TIMER_C_ */

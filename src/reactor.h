@@ -5,8 +5,8 @@
  *      Author: hujin
  */
 
-#ifndef SRC_CORE_REACTOR_H_
-#define SRC_CORE_REACTOR_H_
+#ifndef SRC_REACTOR_H_
+#define SRC_REACTOR_H_
 
 #include "src/skyray.h"
 #include "uv.h"
@@ -26,4 +26,4 @@ void skyray_reactor_run(skyray_reactor_t *self);
 
 PHP_MINIT_FUNCTION(skyray_reactor);
 
-#endif /* SRC_CORE_REACTOR_H_ */
+#endif /* SRC_REACTOR_H_ */

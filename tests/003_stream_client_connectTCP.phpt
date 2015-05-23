@@ -1,12 +1,12 @@
 --TEST--
-Test for StreamClient::connectTCP() blocking mode
+Test for skyray\stream\Client::connectTCP() blocking mode
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
-use skyray\core\StreamClient;
+use skyray\stream\Client;
 use skyray\processing\Process;
-use skyray\core\StreamProtocolInterface;
+use skyray\stream\ProtocolInterface;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 register_shutdown_function(function () use ($server) {
@@ -14,7 +14,7 @@ register_shutdown_function(function () use ($server) {
 });
 
 echo "==== test without protocol ====\n";
-$client = new StreamClient(null);
+$client = new Client(null);
 $stream = $client->connectTCP('127.0.0.1', 2333);
 var_dump(get_class($stream));
 $stream->write("GET / HTTP/1.1\r\nConnection: keep-alive\r\n\r\n");
@@ -26,7 +26,7 @@ echo "==== done ====\n\n";
 echo "==== test with protocol ====\n";
 
 
-class MyProtocol implements StreamProtocolInterface
+class MyProtocol implements ProtocolInterface
 {
     protected $stream;
     protected $data = '';
@@ -57,7 +57,7 @@ $creator = function () {
     return new MyProtocol();
 };
 
-$client = new StreamClient($creator);
+$client = new Client($creator);
 $protocol = $client->connectTCP('127.0.0.1', 2333);
 var_dump(get_class($protocol));
 echo "==== done ====\n";
@@ -65,7 +65,7 @@ echo "==== done ====\n";
 
 --EXPECTF--
 ==== test without protocol ====
-string(18) "skyray\core\Stream"
+string(20) "skyray\stream\Stream"
 HTTP/1.1 404 Not Found
 ==== done ====
 

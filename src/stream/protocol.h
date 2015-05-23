@@ -5,8 +5,8 @@
  *      Author: hujin
  */
 
-#ifndef SRC_CORE_PROTOCOL_H_
-#define SRC_CORE_PROTOCOL_H_
+#ifndef SRC_STREAM_PROTOCOL_H_
+#define SRC_STREAM_PROTOCOL_H_
 
 #include "src/skyray.h"
 
@@ -16,4 +16,4 @@ void skyray_protocol_on_data_received(zval *protocol, zend_string *data);
 void protocol_on_stream_closed(zval *protocol);
 zend_object * skyray_protocol_create_from_factory(zval *creator);
 
-#endif /* SRC_CORE_PROTOCOL_H_ */
+#endif /* SRC_STREAM_PROTOCOL_H_ */

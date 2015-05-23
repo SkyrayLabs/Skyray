@@ -7,7 +7,7 @@
 
 #include "reactor.h"
 #include "timer.h"
-#include "stream.h"
+#include "stream/stream.h"
 
 zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;
@@ -189,6 +189,27 @@ SKYRAY_METHOD(reactor, stop)
     skyray_reactor_stop(intern);
 }
 
+SKYRAY_METHOD(reactor, printActiveObjects)
+{
+    zend_objects_store *objects = &EG(objects_store);
+    zend_object **obj_ptr, **end, *obj;
+    zval value;
+
+    end = objects->object_buckets + 1;
+    obj_ptr = objects->object_buckets + objects->top;
+
+    do {
+        obj_ptr--;
+        obj = *obj_ptr;
+        if (IS_OBJ_VALID(obj)) {
+            ZVAL_OBJ(&value, obj);
+            printf("%s\n", obj->ce->name->val);
+        }
+    } while (obj_ptr != end);
+
+    //shutdown_memory_manager(0, 0);
+}
+
 ZEND_BEGIN_ARG_INFO_EX(arginfo___construct, 0, 0, 0)
 ZEND_END_ARG_INFO()
 
@@ -230,13 +251,14 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, run, arginfo_empty, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, stop, arginfo_empty, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, printActiveObjects, arginfo_empty, ZEND_ACC_PUBLIC | ZEND_ACC_STATIC)
     PHP_FE_END
 };
 
 PHP_MINIT_FUNCTION(skyray_reactor)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\Reactor", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\Reactor", class_methods);
     skyray_ce_Reactor = zend_register_internal_class(&ce);
     skyray_ce_Reactor->create_object = skyray_reactor_object_new;
 

@@ -6,7 +6,7 @@
  */
 
 #include "stream.h"
-#include "reactor.h"
+#include "src/reactor.h"
 
 zend_class_entry *skyray_ce_Stream;
 zend_object_handlers skyray_handler_Stream;
@@ -327,11 +327,17 @@ zend_array *skyray_stream_get_peername(skyray_stream_t *self)
 {
     struct sockaddr_in addr;
     socklen_t socklen = sizeof(addr);
-    if (getpeername(skyray_stream_fd(self), &addr, &socklen) < 0) {
-        return NULL;
+    switch (self->type) {
+    case SR_TCP:
+        if (getpeername(skyray_stream_fd(self), &addr, &socklen) < 0) {
+                return NULL;
+            }
+
+            return sockaddr_to_array(&addr);
+        break;
     }
 
-    return sockaddr_to_array(&addr);
+    return NULL;
 }
 
 zend_array *skyray_stream_get_sockname(skyray_stream_t *self)
@@ -407,6 +413,7 @@ static void read_cb(uv_stream_t *client, ssize_t nread, const uv_buf_t *buf)
         if (nread != UV_EOF) {
             printf("error_rd: %s\n", uv_strerror(nread));
         }
+
         skyray_stream_close(stream);
         return;
     }
@@ -581,7 +588,7 @@ static const zend_function_entry class_methods[] = {
 PHP_MINIT_FUNCTION(stream)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\Stream", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\stream\\Stream", class_methods);
     skyray_ce_Stream = zend_register_internal_class(&ce);
     skyray_ce_Stream->create_object = skyray_stream_object_new;
 

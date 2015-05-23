@@ -7,7 +7,7 @@
 
 
 #include "http.h"
-#include "src/core/stream.h"
+#include "src/stream/stream.h"
 
 zend_class_entry *skyray_ce_HttpProtocol;
 

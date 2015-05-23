@@ -5,10 +5,10 @@
  *      Author: hujin
  */
 
-#include "stream_client.h"
+#include "client.h"
 #include "protocol.h"
 #include "stream.h"
-#include "reactor.h"
+#include "src/reactor.h"
 
 zend_class_entry *skyray_ce_StreamClient;
 zend_object_handlers skyray_handler_StreamClient;
@@ -279,7 +279,7 @@ static const zend_function_entry class_methods[] = {
 PHP_MINIT_FUNCTION(stream_client)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\core\\StreamClient", class_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\stream\\Client", class_methods);
     skyray_ce_StreamClient = zend_register_internal_class(&ce);
     skyray_ce_StreamClient->create_object = skyray_stream_client_object_new;
 
