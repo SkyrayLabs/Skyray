@@ -65,12 +65,12 @@ if test "$PHP_SKYRAY" != "no"; then
   sources="
     src/skyray.c                    \
     src/object.c                    \
-    src/core/reactor.c              \
-    src/core/timer.c                \
-    src/core/protocol.c             \
-    src/core/stream_client.c        \
-    src/core/stream_server.c        \
-    src/core/stream.c               \
+    src/reactor.c                   \
+    src/timer.c                     \
+    src/stream/protocol.c           \
+    src/stream/client.c             \
+    src/stream/server.c             \
+    src/stream/stream.c             \
     src/defer/deferred.c            \
     src/defer/promise.c             \
     src/defer/fulfilled_promise.c   \
