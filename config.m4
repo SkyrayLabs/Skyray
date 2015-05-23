@@ -71,6 +71,7 @@ if test "$PHP_SKYRAY" != "no"; then
     src/stream/client.c             \
     src/stream/server.c             \
     src/stream/stream.c             \
+    src/stream/fdwatcher.c          \
     src/defer/deferred.c            \
     src/defer/promise.c             \
     src/defer/fulfilled_promise.c   \

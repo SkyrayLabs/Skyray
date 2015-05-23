@@ -8,6 +8,7 @@
 #include "reactor.h"
 #include "timer.h"
 #include "stream/stream.h"
+#include "stream/fdwatcher.h"
 
 zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;
@@ -35,11 +36,7 @@ void skyray_reactor_object_free(zend_object *object)
 
 static void walk_cb(uv_handle_t *handle, void *arg)
 {
-
-    if (uv_is_active(handle)) {
-        uv_close(handle, NULL);
-    }
-
+    uv_close(handle, NULL);
 }
 
 void skyray_reactor_run(skyray_reactor_t *self)
@@ -91,15 +88,31 @@ SKYRAY_METHOD(reactor, detach)
 
 SKYRAY_METHOD(reactor, watch)
 {
-    zval *handle, *on_readable = NULL, *on_writable = NULL;
+    zval *fd, *handler;
+    zend_long events = UV_READABLE | UV_WRITABLE;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z|zz", &handle, &on_readable, &on_writable) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "zO|l", &fd, &handler, skyray_ce_FdWatcherHandler, &events) == FAILURE) {
+        return;
+    }
+
+    if ((events & ~(UV_READABLE | UV_WRITABLE)) != 0) {
+        zend_throw_exception_ex(skyray_ce_InvalidParamException, 0, "The $events parameter is invalid");
+        return;
+    }
+
+    if (skyray_get_watchable_fd(fd) < 0) {
+        zend_throw_exception_ex(skyray_ce_InvalidParamException, 0, "The specified file descriptor or resource can not be watched");
         return;
     }
 
     skyray_reactor_t *reactor = skyray_reactor_from_obj(Z_OBJ_P(getThis()));
 
+    skyray_fdwatcher_t *watcher = skyray_fdwatcher_new(reactor, fd, handler);
 
+    if (watcher) {
+        skyray_fdwatcher_watch(watcher, events);
+        RETURN_OBJ(&watcher->std);
+    }
 }
 
 
