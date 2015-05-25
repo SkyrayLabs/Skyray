@@ -5,7 +5,7 @@
  *      Author: hujin
  */
 
-#include "fdwatcher.h"
+#include "watcher.h"
 
 zend_class_entry *skyray_ce_FdWatcher;
 zend_class_entry *skyray_ce_FdWatcherHandler;

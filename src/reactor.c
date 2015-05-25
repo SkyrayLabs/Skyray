@@ -8,7 +8,8 @@
 #include "reactor.h"
 #include "timer.h"
 #include "stream/stream.h"
-#include "watcher/fdwatcher.h"
+#include "watcher/watcher.h"
+#include "processing/process.h"
 
 zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;
@@ -115,13 +116,19 @@ SKYRAY_METHOD(reactor, watch)
     }
 }
 
-
-SKYRAY_METHOD(reactor, unwatch)
+SKYRAY_METHOD(reactor, watchProcess)
 {
-    zval *handle;
+    zval *process, *handler;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS(), "z", &handle) == FAILURE) {
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "OO", &process, skyray_ce_Process, &handler, skyray_ce_ProcessWatcherHandler) == FAILURE) {
         return;
+    }
+
+    skyray_reactor_t *reactor = skyray_reactor_from_obj(Z_OBJ_P(getThis()));
+
+    skyray_process_watcher_t *watcher = skyray_process_watcher_new(reactor, process, handler);
+    if (watcher) {
+        RETURN_OBJ(&watcher->std);
     }
 }
 
@@ -234,14 +241,15 @@ ZEND_BEGIN_ARG_INFO_EX(arginfo_detach, 0, 0, 1)
     ZEND_ARG_INFO(0, stream)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_watch, 0, 0, 1)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_watch, 0, 0, 2)
     ZEND_ARG_INFO(0, fd)
-    ZEND_ARG_INFO(0, onReadable)
-    ZEND_ARG_INFO(0, onWritable)
+    ZEND_ARG_INFO(0, handler)
+    ZEND_ARG_INFO(0, events)
 ZEND_END_ARG_INFO()
 
-ZEND_BEGIN_ARG_INFO_EX(arginfo_unwatch, 0, 0, 1)
-    ZEND_ARG_INFO(0, fd)
+ZEND_BEGIN_ARG_INFO_EX(arginfo_watchProcess, 0, 0, 2)
+    ZEND_ARG_INFO(0, process)
+    ZEND_ARG_INFO(0, handler)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO_EX(arginfo_addTimer, 0, 0, 2)
@@ -258,7 +266,7 @@ static const zend_function_entry class_methods[] = {
     SKYRAY_ME(reactor, attach, arginfo_attach, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, detach, arginfo_detach, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, watch, arginfo_watch, ZEND_ACC_PUBLIC)
-    SKYRAY_ME(reactor, unwatch, arginfo_unwatch, ZEND_ACC_PUBLIC)
+    SKYRAY_ME(reactor, watchProcess, arginfo_watchProcess, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, addTimer, arginfo_addTimer, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, addPeriodicTimer, arginfo_addTimer, ZEND_ACC_PUBLIC)
     SKYRAY_ME(reactor, cancelTimer, arginfo_cancelTimer, ZEND_ACC_PUBLIC)

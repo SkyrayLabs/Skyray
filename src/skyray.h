@@ -52,8 +52,14 @@ extern zend_class_entry * skyray_ce_ProtocolInterface;
 #define SKYRAY_ABSTRACT_ME ZEND_ABSTRACT_ME
 
 #define SKYRAY_MINIT_FUNCTION(module) PHP_MINIT_FUNCTION(skyray_##module)
+#define SKYRAY_MSHUTDOWN_FUNCTION(module) PHP_MSHUTDOWN_FUNCTION(skyray_##module)
+#define SKYRAY_RINIT_FUNCTION(module) PHP_RINIT_FUNCTION(skyray_##module)
+#define SKYRAY_RSHUTDOWN_FUNCTION(module) PHP_RSHUTDOWN_FUNCTION(skyray_##module)
 
 #define SKYRAY_MINIT(module) zm_startup_skyray_##module
+#define SKYRAY_MSHUTDOWN(module) zm_shutdown_skyray_##module
+#define SKYRAY_RINIT(module) zm_activate_skyray_##module
+#define SKYRAY_RSHUTDOWN(module) zm_deactivate_skyray_##module
 
 
 #define SKYRAY_CAST(variable, type)  (type)(variable)

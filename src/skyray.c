@@ -111,6 +111,7 @@ PHP_MINIT_FUNCTION(skyray)
     SKYRAY_MINIT(fdwatcher)(INIT_FUNC_ARGS_PASSTHRU);
 
     SKYRAY_MINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
+    SKYRAY_MINIT(process_watcher)(INIT_FUNC_ARGS_PASSTHRU);
 
     SKYRAY_MINIT(http_message)(INIT_FUNC_ARGS_PASSTHRU);
     SKYRAY_MINIT(http_request)(INIT_FUNC_ARGS_PASSTHRU);
@@ -127,10 +128,21 @@ PHP_MINIT_FUNCTION(skyray)
 }
 /* }}} */
 
-/* {{{ PHP_MSHUTDOWN_FUNCTION
+/* {{{ PHP_RINIT_FUNCTION
  */
-PHP_MSHUTDOWN_FUNCTION(skyray)
+PHP_RINIT_FUNCTION(skyray)
 {
+    SKYRAY_RINIT(process)(INIT_FUNC_ARGS_PASSTHRU);
+
+    return SUCCESS;
+}
+/* }}} */
+
+/* {{{ PHP_RSHUTDOWN_FUNCTION
+ */
+PHP_RSHUTDOWN_FUNCTION(skyray)
+{
+    SKYRAY_RSHUTDOWN(process)(INIT_FUNC_ARGS_PASSTHRU);
 
     return SUCCESS;
 }
@@ -163,9 +175,9 @@ zend_module_entry skyray_module_entry = {
     "skyray",
     NULL,
     PHP_MINIT(skyray),
-    PHP_MSHUTDOWN(skyray),
-    NULL, /* RINIT */
-    NULL, /* RSHUTDOWN */
+    NULL, //PHP_MSHUTDOWN(skyray),
+    PHP_RINIT(skyray),
+    PHP_RSHUTDOWN(skyray),
     PHP_MINFO(skyray),
 #if ZEND_MODULE_API_NO >= 20010901
     "0.0.1", /* Replace with version number for your extension */

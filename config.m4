@@ -75,8 +75,9 @@ if test "$PHP_SKYRAY" != "no"; then
     src/defer/promise.c             \
     src/defer/fulfilled_promise.c   \
     src/defer/rejected_promise.c    \
-    src/watcher/fdwatcher.c         \
     src/processing/process.c        \
+    src/watcher/fdwatcher.c         \
+    src/watcher/process_watcher.c   \
     deps/http-parser/http_parser.c  \
     src/http/message.c              \
     src/http/request.c              \

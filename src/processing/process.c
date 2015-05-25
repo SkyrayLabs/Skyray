@@ -9,12 +9,14 @@
 #include "src/skyray.h"
 #include "src/processing/process.h"
 
+
 zend_class_entry *skyray_ce_Process;
 zend_object_handlers skyray_handler_Process;
 
-static inline skyray_process_t *skyray_process_from_obj(zend_object *obj) /* {{{ */ {
-    return (skyray_process_t*)((char*)(obj) - XtOffsetOf(skyray_process_t, std));
-}
+zend_array skyray_child_processes;
+zend_long skyray_sigchld_count = -1;
+uv_signal_t skyray_sigchld;
+
 
 static zend_object * skyray_process_object_new(zend_class_entry *entry)
 {
@@ -69,6 +71,21 @@ int call_user_function_array(HashTable *function_table, zval *object, zval *func
     return retval;
 }
 
+skyray_process_t *skyray_process_get_by_pid(pid_t pid)
+{
+    zval *zprocess = zend_hash_index_find(&skyray_child_processes, pid);
+    if (!zprocess) {
+        return NULL;
+    }
+
+    return skyray_process_from_obj(Z_OBJ_P(zprocess));
+}
+
+zend_bool skyray_process_delete_by_pid(pid_t pid)
+{
+    return zend_hash_index_del(&skyray_child_processes, pid) == SUCCESS;
+}
+
 SKYRAY_METHOD(Process, __construct)
 {
     zval *callable = NULL;
@@ -104,12 +121,16 @@ SKYRAY_METHOD(Process, start)
     object->status = SKYRAY_PROCESS_RUNNING;
 
     if (pid == 0) { // child process
+        skyray_sigchld_count = -1;
+        zend_hash_clean(&skyray_child_processes);
+
         object->pid = getpid();
         ZVAL_STRING(&func_name, "run");
         call_user_function(EG(function_table), getThis(), &func_name, &retval, 0, NULL);
         zval_dtor(&func_name);
     } else {
         object->pid = pid;
+        zend_hash_index_update(&skyray_child_processes, pid, getThis());
     }
 }
 
@@ -254,3 +275,16 @@ SKYRAY_MINIT_FUNCTION(process)
     return SUCCESS;
 }
 
+SKYRAY_RINIT_FUNCTION(process)
+{
+    zend_hash_init(&skyray_child_processes, 16, NULL, ZVAL_PTR_DTOR, 0);
+
+    return SUCCESS;
+}
+
+SKYRAY_RSHUTDOWN_FUNCTION(process)
+{
+    zend_hash_destroy(&skyray_child_processes);
+
+    return SUCCESS;
+}
