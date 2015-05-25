@@ -71,11 +71,11 @@ if test "$PHP_SKYRAY" != "no"; then
     src/stream/client.c             \
     src/stream/server.c             \
     src/stream/stream.c             \
-    src/stream/fdwatcher.c          \
     src/defer/deferred.c            \
     src/defer/promise.c             \
     src/defer/fulfilled_promise.c   \
     src/defer/rejected_promise.c    \
+    src/watcher/fdwatcher.c         \
     src/processing/process.c        \
     deps/http-parser/http_parser.c  \
     src/http/message.c              \

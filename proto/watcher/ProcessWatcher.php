@@ -5,14 +5,14 @@
  * Date: 15-5-23
  */
 
-namespace skyray\processing;
+namespace skyray\watcher;
 
 use skyray\Watcher;
 
 /**
  * Class ProcessWatcher
  *
- * @package skyray\processing
+ * @package skyray\watcher
  * @since 1.0
  */
 class ProcessWatcher extends Watcher
@@ -20,7 +20,7 @@ class ProcessWatcher extends Watcher
     /**
      * Returns the watched process.
      *
-     * @return Process
+     * @return \skyray\processing\Process
      */
     public function getProcess()
     {

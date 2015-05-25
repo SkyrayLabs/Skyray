@@ -8,7 +8,7 @@
 #include "reactor.h"
 #include "timer.h"
 #include "stream/stream.h"
-#include "stream/fdwatcher.h"
+#include "watcher/fdwatcher.h"
 
 zend_class_entry *skyray_ce_Reactor;
 zend_object_handlers skyray_handler_Reactor;

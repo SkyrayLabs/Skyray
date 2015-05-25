@@ -2,7 +2,7 @@
 
 namespace skyray;
 
-use skyray\stream\FdWatcher;
+use skyray\watcher\FdWatcher;
 
 /**
  * Class Reactor
@@ -39,7 +39,7 @@ class Reactor
      * @param \skyray\stream\FdWatcherHandler $handler
      * @param int $events The interested events to watch, must be combination of FdWatcher::READABLE and
      * FdWatcher::WRITABLE.
-     * @return \skyray\stream\FdWatcher
+     * @return \skyray\watcher\FdWatcher
      */
     public function watch($fd, $handler, $events = FdWatcher::READABLE | FdWatcher::WRITABLE)
     {
@@ -50,8 +50,8 @@ class Reactor
      * Monitoring filesystem changes.
      *
      * @param string $filename
-     * @param \skyray\fs\FileEventHandler $handler
-     * @return \skyray\fs\FileWatcher
+     * @param \skyray\watcher\FileWatcherHandler $handler
+     * @return \skyray\watcher\FileWatcher
      */
     public function watchFile($filename, $handler)
     {
@@ -62,8 +62,8 @@ class Reactor
      * Monitoring process state changes.
      *
      * @param \skyray\processing\Process $process
-     * @param \skyray\processing\ProcessWatcherHandler $handler
-     * @return Watcher
+     * @param \skyray\watcher\ProcessWatcherHandler $handler
+     * @return \skyray\watcher\ProcessWatcher
      */
     public function watchProcess($process, $handler)
     {

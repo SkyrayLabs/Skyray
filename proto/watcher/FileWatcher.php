@@ -5,14 +5,14 @@
  * Date: 15-5-23
  */
 
-namespace skyray\fs;
+namespace skyray\watcher;
 
 use skyray\Watcher;
 
 /**
  * Class FileWatcher
  *
- * @package skyray\fs
+ * @package skyray\watcher
  * @since 1.0
  */
 class FileWatcher extends Watcher

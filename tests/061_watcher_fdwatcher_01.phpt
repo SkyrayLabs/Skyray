@@ -1,12 +1,12 @@
 --TEST--
-Test for skyray\stream\FdWatcher()
+Test for skyray\watcher\FdWatcher()
 --SKIPIF--
 <?php if (!extension_loaded("skyray")) print "skip"; ?>
 --FILE--
 <?php
 use skyray\Reactor;
-use skyray\stream\FdWatcher;
-use skyray\stream\FdWatcherHandler;
+use skyray\watcher\FdWatcher;
+use skyray\watcher\FdWatcherHandler;
 
 $server = require_once __DIR__ . '/includes/ServerProcess.php';
 register_shutdown_function(function () use ($server) {
@@ -83,4 +83,4 @@ before readable: readable: 1, writable: 0
 received: HTTP/1.1 404 Not Found
 after  readable: readable: 0, writable: 0
 stop: readable: 0, writable: 0
-string(23) "skyray\stream\FdWatcher"
+string(24) "skyray\watcher\FdWatcher"

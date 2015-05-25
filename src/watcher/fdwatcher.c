@@ -246,12 +246,12 @@ static const zend_function_entry fdwacher_methods[] = {
 SKYRAY_MINIT_FUNCTION(fdwatcher)
 {
     zend_class_entry ce;
-    INIT_CLASS_ENTRY(ce, "skyray\\stream\\FdWatcherHandler", fdwatcher_handler_method);
+    INIT_CLASS_ENTRY(ce, "skyray\\watcher\\FdWatcherHandler", fdwatcher_handler_method);
     skyray_ce_FdWatcherHandler = zend_register_internal_class(&ce);
     zend_declare_property_null(skyray_ce_FdWatcherHandler, ZEND_STRL("watcher"), ZEND_ACC_PUBLIC);
 
 
-    INIT_CLASS_ENTRY(ce, "skyray\\stream\\FdWatcher", fdwacher_methods);
+    INIT_CLASS_ENTRY(ce, "skyray\\watcher\\FdWatcher", fdwacher_methods);
     skyray_ce_FdWatcher = zend_register_internal_class(&ce);
     skyray_ce_FdWatcher->create_object = skyray_fdwatcher_object_new;
 

@@ -5,12 +5,12 @@
  * Date: 15-5-23
  */
 
-namespace skyray\fs;
+namespace skyray\watcher;
 
 /**
  * Class FileWatcherHandler
  *
- * @package skyray\stream
+ * @package skyray\watcher
  * @since 1.0
  */
 abstract class FileWatcherHandler

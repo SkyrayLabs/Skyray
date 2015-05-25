@@ -5,12 +5,12 @@
  * Date: 15-5-23
  */
 
-namespace skyray\processing;
+namespace skyray\watcher;
 
 /**
  * Class ProcessWatcherHandler
  *
- * @package skyray\processing
+ * @package skyray\watcher
  * @since 1.0
  */
 abstract class ProcessWatcherHandler
