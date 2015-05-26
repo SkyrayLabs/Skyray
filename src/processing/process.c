@@ -130,6 +130,7 @@ SKYRAY_METHOD(Process, start)
         zval_dtor(&func_name);
     } else {
         object->pid = pid;
+        zval_add_ref(getThis());
         zend_hash_index_update(&skyray_child_processes, pid, getThis());
     }
 }

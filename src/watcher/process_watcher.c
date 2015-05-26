@@ -35,7 +35,7 @@ static  void skyray_process_watcher_object_free(zend_object *object)
     skyray_process_watcher_t *intern = skyray_process_watcher_from_obj(object);
 
     zend_object_release(intern->handler);
-    //zend_object_release(&intern->process->std); ??
+    zend_object_release(&intern->process->std);
 
     zend_object_std_dtor(&intern->std);
 }
