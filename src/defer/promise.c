@@ -16,7 +16,7 @@ zend_string *intern_str_then;
 zend_string *intern_str_done;
 
 typedef struct _resolve_context {
-    zend_refcounted gc;
+    zend_refcounted_h gc;
     skyray_promise_t *self;
     skyray_promise_t *late;
     zval callback;
@@ -26,12 +26,12 @@ static promise_resolve_context_t * promise_resolve_context_create(skyray_promise
 {
     promise_resolve_context_t *context = emalloc(sizeof(promise_resolve_context_t));
 
-    GC_REFCOUNT(context) = 1;
+    GC_REFCOUNT((zend_refcounted *)context) = 1;
 
     // if context->self is NULL, this context is created for done()
     context->self = self;
     if (self) {
-        GC_REFCOUNT(&self->std) ++;
+        GC_REFCOUNT((zend_refcounted *)&self->std) ++;
     }
 
     ZVAL_NULL(&context->callback);
@@ -48,7 +48,7 @@ static promise_resolve_context_t * promise_resolve_context_create(skyray_promise
 static void context_copy_func(void *pElement)
 {
     promise_resolve_context_t *context = Z_PTR_P((zval *)pElement);
-    GC_REFCOUNT(context) ++;
+    GC_REFCOUNT((zend_refcounted *)context) ++;
 }
 
 static void promise_resolve_context_call(promise_resolve_context_t *context, zval *value)

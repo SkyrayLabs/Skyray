@@ -73,7 +73,7 @@ PHP_MINIT_FUNCTION(skyray_exceptions)
 {
     zend_class_entry ce;
     INIT_CLASS_ENTRY(ce, "skyray\\BaseException", NULL);
-    skyray_ce_BaseException = zend_register_internal_class_ex(&ce, zend_exception_get_default());
+    skyray_ce_BaseException = zend_register_internal_class_ex(&ce, zend_ce_exception);
 
     INIT_CLASS_ENTRY(ce, "skyray\\InvalidParamException", NULL);
     skyray_ce_InvalidParamException = zend_register_internal_class_ex(&ce, skyray_ce_BaseException);
